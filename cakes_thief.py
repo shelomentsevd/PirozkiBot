@@ -5,8 +5,9 @@ import json
 import re
 from datetime import datetime
 
-def insertToDB(cursor, text, likes, reposts, date):
-	cursor.execute('INSERT INTO cakes(likes, reposts, text, date) values(%s, %s, %s, %s)', (likes, reposts, text, date))
+def insertToDB(cursor, post_id, text, likes, reposts, date):
+	#WARN: SQL injection!
+	cursor.execute('INSERT INTO cakes(post_id, likes, reposts, text, date) values(%s, %s, %s, %s, %s)', (post_id ,likes, reposts, text, date))
 
 def iso8601(utc):
 	return datetime.fromtimestamp(utc).isoformat()
@@ -34,16 +35,19 @@ def insertAll(cursor, posts):
 		raw_author = ''
 		likes   = item['likes']['count']
 		reposts = item['reposts']['count']
+		post_id = item['id']
 		text = author(text)
-		date = iso8601(item['date'])
-		insertToDB(cursor, text, likes, reposts, date)
+		#date = iso8601(item['date'])
+		#insertToDB(cursor, post_id, text, likes, reposts, date)
+		print 'post id %s' % post_id
 		#print 'likes %s reposts %s' % (likes, reposts)
 		#print '\n'+text
 
 def main():
+	#TODO: Add configs!
 	db = pg8000.connect(user='cakesbot', password='cakesbot', database='cakesbot', host='localhost')
-	step = 100	
-	offset = 0
+	step = 10	
+	offset = 10
 	count = 0
 	cursor = db.cursor()
 	while True:
@@ -51,7 +55,8 @@ def main():
 		print 'offset: %d count: %d' % (offset, count)
 		insertAll(cursor, result)
 		db.commit()
-		count = result[0]
+		count = 10
+		#count = result[0]
 		if offset > count:
 			break
 		offset += step
