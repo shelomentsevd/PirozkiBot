@@ -24,3 +24,6 @@ def author(raw_text):
 	"""
 	result = re.sub('\[id[0-9^\|]+\||[\]]', '', raw_text).replace('&amp;', '&').strip()
 	return re.sub(' +', ' ', result)
+
+def makePretty(text):
+	return author(br(text))

@@ -4,9 +4,48 @@ import requests
 import json
 import helpers
 
-def insertToDB(cursor, post_id, text, likes, reposts, date):
-	#WARN: SQL injection!
-	cursor.execute('INSERT INTO cakes(post_id, likes, reposts, text, date) values(%s, %s, %s, %s, %s)', (post_id ,likes, reposts, text, date))
+class Database:
+	"""Cakes database class.
+	   Wrap above pg8000 and PostgreSQL
+	   Isn't thread safe!"""
+	def __init__(self, user, password, database, host):
+		"""Connect to database"""
+		self.__db = pg8000.connect(user=user, password=password, database=database, host=host)
+		self.__cursor = self.__db.cursor()
+
+	def insert(self, post):
+		"""Insert poem in database"""
+		post_id   = post['id']
+		text      = helpers.makePretty(post['text'])
+		likes     = post['likes']['count']
+		reposts   = post['reposts']['count']
+		date      = helpers.iso8601(post['date'])
+		self.__cursor.execute('INSERT INTO cakes (post_id, likes, reposts, text, date) values(%s, %s, %s, %s, %s)', 
+			post_id, likes, reposts, text, date)
+
+	def insertAll(self, posts):
+		"""Insert poems in database
+		   Each item in posts should be like this: 
+		   {
+				'text': '',
+				'likes': {
+					'count': 7
+				},
+				'reposts': {
+					'count': 8
+				},
+				'date': 1438687279,
+				'id': 1
+			}
+		"""
+		for item in posts:
+			self.insert(item)
+		self.__db.commit()
+
+	def count(self):
+		"""Returns amount of poems in database"""
+	def last(self):
+		"""Returns last poem from database"""
 
 def getwall(owner, count, offset):
 	data = {
@@ -17,33 +56,17 @@ def getwall(owner, count, offset):
 	r = requests.post('http://api.vk.com/method/wall.get', data=data)
 	return r.json()['response']
 
-def insertAll(cursor, posts):
-	for item in posts[1:]:
-		text = helpers.br(item['text'])
-		raw_author = ''
-		likes   = item['likes']['count']
-		reposts = item['reposts']['count']
-		post_id = item['id']
-		text = helpers.author(text)
-		#date = iso8601(item['date'])
-		#insertToDB(cursor, post_id, text, likes, reposts, date)
-		print 'post id %s' % post_id
-		#print 'likes %s reposts %s' % (likes, reposts)
-		#print '\n'+text
-
 def main():
 	#TODO: Add configs!
-	db = pg8000.connect(user='cakesbot', password='cakesbot', database='cakesbot', host='localhost')
+	db = Database(user='cakesbot', password='cakesbot', database='cakesbot', host='localhost')
 	step = 10	
 	offset = 10
 	count = 0
-	cursor = db.cursor()
 	while True:
 		result = getwall('-28122932', step, offset)
 		print 'offset: %d count: %d' % (offset, count)
-		insertAll(cursor, result)
-		db.commit()
 		count = 10
+		db.insertAll(result[1:])
 		#count = result[0]
 		if offset > count:
 			break
