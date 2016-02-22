@@ -1,5 +1,6 @@
 import sys
 import pg8000
+import ConfigParser as cp
 import requests
 import json
 import helpers
@@ -57,8 +58,25 @@ def getwall(owner, count, offset):
 	return r.json()['response']
 
 def main():
-	#TODO: Add configs!
+	try:
+		config = cp.ConfigParser()
+		config.read('./conf/main.ini')
+		user 	 = config.get('database', 'user')
+		password = config.get('database', 'password')
+		database = config.get('database', 'database')
+		host 	 = config.get('database', 'host')
+	except:
+		print 'Config file error'
+		sys.exit()
+
+	print 'Cakes thief: trying to connect to PostgreSQL database'
+	print 'User: ', user
+	print 'Password: ', password
+	print 'Database: ', database
+	print 'Host: ', host
+
 	db = Database(user='cakesbot', password='cakesbot', database='cakesbot', host='localhost')
+
 	step = 10	
 	offset = 10
 	count = 0
