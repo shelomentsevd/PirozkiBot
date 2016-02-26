@@ -2,7 +2,7 @@ import sys
 import ConfigParser as cp
 import requests
 import json
-from database import Database
+from app.database import Database
 
 def getwall(owner, count, offset):
 	data = {
@@ -16,7 +16,7 @@ def getwall(owner, count, offset):
 def main():
 	try:
 		config = cp.ConfigParser()
-		config.read('./conf/main.ini')
+		config.read('./app/conf/main.ini')
 		#database section
 		user 	 = config.get('database', 'user')
 		password = config.get('database', 'password')
