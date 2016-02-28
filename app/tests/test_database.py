@@ -38,16 +38,29 @@ class DatabaseTestCase(unittest.TestCase):
 
     def setUp(self):
         self.__db = Database(user='cakesbot', password='cakesbot', database='cakesbot_test', host='localhost')
-        self.__db.clean()    
+        self.__db.clean()
     
     def tearDown(self):
         self.__db.clean()
 
-    def test_insertAll(self):
+    def test_insertAll_1(self):
+        """Database.insertAll base functionality test"""
         self.__db.insertAll(self.posts)
         count = self.__db.count()
-        self.assertEqual(count, 2, 'Database.insertAll([post1, post2]) test failed')
+        self.assertEqual(count, 2, 'Database.insertAll([post1, post2]) test 1 failed')
+
+    def test_insertAll_2(self):
+        """insert posts twice or more"""
+        self.__db.insertAll(self.posts)
+        self.__db.insertAll(self.posts)
+        self.__db.insertAll(self.posts)
+        count = self.__db.count()
+        self.assertTrue(count == 2, 'Database.insertAll([post1, post2]) test 2 failed')
+
+    def test_insert(self):
+        self.assertTrue(self.__db.insert(self.posts[0]), 'Database.insert(post) failed')
+        self.assertFalse(self.__db.insert(self.posts[0]),'Database.insert(post) failed')
 
     def test_hasId(self):
         self.__db.insertAll(self.posts)
-        self.assertEqual(self.__db.has(2), True, 'Database.has(id) test failed')
+        self.assertTrue(self.__db.has(2), 'Database.has(id) test failed')

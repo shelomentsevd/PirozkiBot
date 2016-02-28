@@ -17,9 +17,15 @@ class Database:
 		likes     = post['likes']['count']
 		reposts   = post['reposts']['count']
 		date      = helpers.iso8601(post['date'])
-		self.__cursor.execute('INSERT INTO cakes (post_id, likes, reposts, text, date) values(%s, %s, %s, %s, %s)', 
-			(post_id, likes, reposts, text, date))
-		self.__db.commit()
+		try:
+			self.__cursor.execute('INSERT INTO cakes (post_id, likes, reposts, text, date) values(%s, %s, %s, %s, %s)', 
+				(post_id, likes, reposts, text, date))
+			self.__db.commit()
+		except:
+			self.__db.rollback()
+			return False
+
+		return True
 
 	def insertAll(self, posts):
 		"""Insert poems in database
@@ -37,7 +43,8 @@ class Database:
 			}
 		"""
 		for item in posts:
-			self.insert(item)
+			if not self.has(item['id']):
+				self.insert(item)
 
 	def has(self, id):
 		"""
