@@ -43,8 +43,8 @@ class Database:
             }
         """
         for item in posts:
-            if not self.has(item['id']):
-                self.insert(item)
+            if self.insert(item):
+                print '%s Added to base' % ( item['id'] )
 
     def has(self, id):
         """

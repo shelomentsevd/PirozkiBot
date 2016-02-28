@@ -2,6 +2,7 @@ import sys
 import ConfigParser as cp
 import requests
 import json
+import time
 from app.database import Database
 
 def getwall(owner, count, offset):
@@ -10,8 +11,12 @@ def getwall(owner, count, offset):
         'count': count,
         'offset': offset
     }
-    r = requests.post('http://api.vk.com/method/wall.get', data=data)
-    return r.json()['response']
+    try:
+        r = requests.post('http://api.vk.com/method/wall.get', data=data)
+    except:
+        print 'Connection reset by peer'
+        return False
+    return r.json()['response']    
 
 def main():
     try:
@@ -37,17 +42,26 @@ def main():
 
     db = Database(user='cakesbot', password='cakesbot', database='cakesbot', host='localhost')
 
-    step = 10    
-    offset = 10
+    step = 100    
+    offset = 0
     count = 0
     while True:
         result = getwall(wall, step, offset)
-        print 'offset: %d count: %d' % (offset, count)
-        count = 10
+        
+        while not result:
+            result = getwall(wall, step, offset)
+
+        print 'offset: %d count: %d' % (offset, db.count())
         db.insertAll(result[1:])
-        #count = result[0]
+        count = result[0]
         if offset > count:
             break
         offset += step
+
+    while True:
+        time.sleep(60*5)
+        offset = db.count()
+        print 'Cakes: %s' % (offset)
+        result = getwall(wall, step, offset)
         
 main()
