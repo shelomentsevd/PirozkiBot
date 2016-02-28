@@ -64,7 +64,7 @@ class Database:
     def last(self):
         """Returns last poem from database"""
         self.__cursor.execute('SELECT max(post_id) FROM cakes')
-        return self.__cursor.fetchone()
+        return self.__cursor.fetchone()[0]
     def clean(self):
         """Will delete all cake-poems from database.
            DO NOT USE! ONLY FOR TEST PURPOSE!

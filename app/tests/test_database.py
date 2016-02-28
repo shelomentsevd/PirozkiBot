@@ -64,3 +64,7 @@ class DatabaseTestCase(unittest.TestCase):
     def test_hasId(self):
         self.__db.insertAll(self.posts)
         self.assertTrue(self.__db.has(2), 'Database.has(id) test failed')
+
+    def test_last(self):
+        self.__db.insertAll(self.posts)
+        self.assertEqual(self.__db.last(), 2)
