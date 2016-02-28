@@ -19,6 +19,7 @@ class Database:
 		date      = helpers.iso8601(post['date'])
 		self.__cursor.execute('INSERT INTO cakes (post_id, likes, reposts, text, date) values(%s, %s, %s, %s, %s)', 
 			(post_id, likes, reposts, text, date))
+		self.__db.commit()
 
 	def insertAll(self, posts):
 		"""Insert poems in database
@@ -37,18 +38,30 @@ class Database:
 		"""
 		for item in posts:
 			self.insert(item)
-		self.__db.commit()
-	def has(id):
+
+	def has(self, id):
 		"""
 			Returns true if post with id already exists
 		"""
-		self.__cursor.execute('SELECT id FROM cakes WHERE post_id = %s', id)
-		self.fetchone()
+		self.__cursor.execute('SELECT post_id FROM cakes WHERE post_id = %s' % (id))
+		result = self.__cursor.fetchone()
+		if result:
+			return result[0] == id
+		else:
+			return False
+
 	def count(self):
 		"""Returns amount of poems in database"""
 		self.__cursor.execute('SELECT count(post_id) FROM cakes')
-		return self.__cursor.fetchone()
+		return self.__cursor.fetchone()[0]
 	def last(self):
 		"""Returns last poem from database"""
 		self.__cursor.execute('SELECT max(post_id) FROM cakes')
 		return self.__cursor.fetchone()
+	def clean(self):
+		"""Will delete all cake-poems from database.
+		   DO NOT USE! ONLY FOR TEST PURPOSE!
+		"""
+		self.__cursor.execute('DELETE FROM cakes WHERE True')
+		self.__db.commit()
+		return self.count()
