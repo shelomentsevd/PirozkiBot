@@ -42,26 +42,18 @@ def main():
 
     db = Database(user='cakesbot', password='cakesbot', database='cakesbot', host='localhost')
 
-    step = 100    
-    offset = 0
-    count = 0
     while True:
-        result = getwall(wall, step, offset)
-        
-        while not result:
+        step = 10
+        offset = 0
+        while True:
             result = getwall(wall, step, offset)
+            # TODO OUT OF RANGE IF FIRST START
+            if not db.has(result[1]['id']):
+                db.insertAll(result[1:])
+                offset += step
+            else:
+                break
+        print 'Cakes: %s' % (db.count())
+        time.sleep(5)
 
-        print 'offset: %d count: %d' % (offset, db.count())
-        db.insertAll(result[1:])
-        count = result[0]
-        if offset > count:
-            break
-        offset += step
-
-    while True:
-        time.sleep(60*5)
-        offset = db.count()
-        print 'Cakes: %s' % (offset)
-        result = getwall(wall, step, offset)
-        
 main()

@@ -7,7 +7,7 @@ from datetime import datetime
 
 def iso8601(utc):
     """
-        From UTC to iso8601
+        From UnixTime to iso8601
     """
     return datetime.fromtimestamp(utc).isoformat()
 
