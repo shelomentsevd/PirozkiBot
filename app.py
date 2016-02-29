@@ -28,7 +28,8 @@ def main():
         database = config.get('database', 'database')
         host      = config.get('database', 'host')
         #other section
-        wall = config.get('other', 'wall')
+        wall   = config.get('other', 'wall')
+        update = config.getfloat('other', 'update')
     except:
         print 'Config file error'
         sys.exit()
@@ -39,6 +40,7 @@ def main():
     print 'Database: ', database
     print 'Host: ', host
     print 'Wall: ', wall
+    print 'Update in seconds: ', update
 
     db = Database(user='cakesbot', password='cakesbot', database='cakesbot', host='localhost')
 
@@ -54,6 +56,6 @@ def main():
             else:
                 break
         print 'Cakes: %s' % (db.count())
-        time.sleep(5)
+        time.sleep(update)
 
 main()
