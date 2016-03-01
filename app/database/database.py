@@ -65,6 +65,12 @@ class Database:
         """Returns last poem from database"""
         self.__cursor.execute('SELECT max(post_id) FROM cakes')
         return self.__cursor.fetchone()[0]
+
+    def random(self):
+        """Returns random poem from database"""
+        self.__cursor.execute('select text from cakes OFFSET floor(random()*(SELECT count(*) FROM cakes)) LIMIT 1')
+        return self.__cursor.fetchone()[0]
+
     def clean(self):
         """Will delete all cake-poems from database.
            DO NOT USE! ONLY FOR TEST PURPOSE!

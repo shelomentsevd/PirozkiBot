@@ -42,7 +42,7 @@ def main():
     print 'Wall: ', wall
     print 'Update in seconds: ', update
 
-    db = Database(user='cakesbot', password='cakesbot', database='cakesbot', host='localhost')
+    db = Database(user=user, password=password, database=database, host=host)
 
     while True:
         step = 10
@@ -50,11 +50,15 @@ def main():
         while True:
             result = getwall(wall, step, offset)
             # TODO OUT OF RANGE IF FIRST START
-            if not db.has(result[1]['id']):
-                db.insertAll(result[1:])
-                offset += step
+            if result:
+                if not db.has(result[1]['id']):
+                    db.insertAll(result[1:])
+                    offset += step
+                else:
+                    break
             else:
-                break
+                break            
+        
         print 'Cakes: %s' % (db.count())
         time.sleep(update)
 
