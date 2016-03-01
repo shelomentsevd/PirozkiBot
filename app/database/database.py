@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import pg8000
 import helpers
 
@@ -68,8 +69,34 @@ class Database:
 
     def random(self):
         """Returns random poem from database"""
-        self.__cursor.execute('select text from cakes OFFSET floor(random()*(SELECT count(*) FROM cakes)) LIMIT 1')
-        return self.__cursor.fetchone()[0]
+        self.__cursor.execute('SELECT text FROM cakes OFFSET floor(random()*(SELECT count(*) FROM cakes)) LIMIT 1')
+        result = self.__cursor.fetchone()
+        if result:
+            return result[0]
+        else:
+            return ''
+
+    def randomByWord(self, word):
+        """Returns random poem from database which contains @word"""
+        self.__cursor.execute("SELECT text FROM cakes WHERE text @@ '%s' OFFSET( random()*( SELECT count(*) FROM cakes WHERE text @@ '%s' ) ) LIMIT 1" % (word, word));
+        result = self.__cursor.fetchone()
+        if result:
+            return result[0]
+        else:
+            return 'ничего не найдено'
+
+    def listByWord(self, word):
+        """Returns poems list. Each poem contains @word"""
+        self.__cursor.execute("SELECT text FROM cakes WHERE text @@ '%s'" % (word))
+        dbresult = self.__cursor.fetchall()
+        if dbresult:
+            result = ''
+            for text in dbresult:
+                result += text[0]
+                result += '\n'
+            return result
+        else:
+            return 'ничего не найдено'
 
     def clean(self):
         """Will delete all cake-poems from database.
