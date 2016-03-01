@@ -12,26 +12,37 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 class CakesBot:
+    __help = '''
+Доступные команды:
+    /random - пришлёт вам случайный пирожок
+    /search [слово] - поиск по пирожкам
+    /help - выведет эту справку
+    /about - выводит информацию о боте
+    '''
+    __about = '''
+Написано just for fun из любви к стишкам.
+Контент берётся отсюда: https://vk.com/perawki
+Автор: @HissingSound
+    '''
+
     def __init__(self, user, password, database, host):
         self.__db = Database(user=user, password=password, database=database, host=host)
 
     def start(self, bot, update):
-        bot.sendMessage(update.message.chat_id, text='Hi!')
+        bot.sendMessage(update.message.chat_id, text=self.__help)
 
     def help(self, bot, update):
-        bot.sendMessage(update.message.chat_id, text='''
-Доступные команды:
-    \\random - пришлёт вам случайный пирожок
-    \\search [слово] - поиск по пирожкам
-    \\help - выведет эту справку
-            ''')
+        bot.sendMessage(update.message.chat_id, text=self.__help)
 
     def random(self, bot, update):
         poem = self.__db.random()
         bot.sendMessage(update.message.chat_id, text=poem)
 
     def search(self, bot, update):
-        bot.sendMessage(update.message.chat_id, text='Извините, этот метод пока что не работает')        
+        bot.sendMessage(update.message.chat_id, text='Извините, этот метод пока что не работает')
+
+    def about(self, bot, update):
+        bot.sendMessage(update.message.chat_id, text=self.__about)
     
     def error(self, bot, update, error):
         logger.warn('Update "%s" caused error "%s"' % (update, error))
@@ -64,6 +75,7 @@ def main():
     dp.addTelegramCommandHandler("help",   cakesBot.help)
     dp.addTelegramCommandHandler("random", cakesBot.random)
     dp.addTelegramCommandHandler("search", cakesBot.search)
+    dp.addTelegramCommandHandler("about",  cakesBot.about)
 
     # on noncommand i.e message - echo the message on Telegram
     dp.addTelegramMessageHandler(cakesBot.help)
