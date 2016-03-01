@@ -83,7 +83,7 @@ class Database:
         if result:
             return result[0]
         else:
-            return 'ничего не найдено'
+            return self.listByWord(word)
 
     def listByWord(self, word):
         """Returns poems list. Each poem contains @word"""

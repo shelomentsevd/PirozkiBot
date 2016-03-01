@@ -38,10 +38,8 @@ class CakesBot:
         poem = ''
 
         if len(word):
-            logger.info("RANDOM WORD message %s" % word)
             poem = self.__db.randomByWord(word)
         else:
-            logger.info("RANDOM message %s" % word)
             poem = self.__db.random()
 
         bot.sendMessage(update.message.chat_id, text=poem)
