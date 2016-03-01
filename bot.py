@@ -32,10 +32,6 @@ class CakesBot:
 
     def search(self, bot, update):
         bot.sendMessage(update.message.chat_id, text='Извините, этот метод пока что не работает')        
-
-    def echo(self, bot, update):
-        logger.info('User id %s' % (update.message.chat_id))
-        bot.sendMessage(update.message.chat_id, text=update.message.text)
     
     def error(self, bot, update, error):
         logger.warn('Update "%s" caused error "%s"' % (update, error))
@@ -70,7 +66,7 @@ def main():
     dp.addTelegramCommandHandler("search", cakesBot.search)
 
     # on noncommand i.e message - echo the message on Telegram
-    dp.addTelegramMessageHandler(cakesBot.echo)
+    dp.addTelegramMessageHandler(cakesBot.help)
 
     # log all errors
     dp.addErrorHandler(cakesBot.error)
