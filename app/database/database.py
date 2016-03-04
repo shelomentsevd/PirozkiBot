@@ -98,6 +98,19 @@ class Database:
         else:
             return 'ничего не найдено'
 
+    def last(self, number):
+        """Returns last @number poem"""
+        self.__cursor.execute("select text from cakes OFFSET (SELECT count(*) FROM cakes) - %s LIMIT %s" % (number, number)) 
+        dbresult = self.__cursor.fetchall()
+        if dbresult:
+            result = ''
+            for text in dbresult:
+                result += text[0]
+                result += '\n\n'
+            return result
+        else:
+            return 'ничего не найдено'
+
     def clean(self):
         """Will delete all cake-poems from database.
            DO NOT USE! ONLY FOR TEST PURPOSE!

@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 class CakesBot:
     __help = '''
 Доступные команды:
+    /last - присылает пять последних пирожков
     /random - присылает вам случайный пирожок, если после /random написать слово вы получите случайный пирожок с этим словом
     /help  - выводит эту справку
     /about - выводит информацию о боте
@@ -49,6 +50,10 @@ class CakesBot:
         #poems = self.__db.listByWord(word)
         bot.sendMessage(update.message.chat_id, text='Извините, этот метод пока что не работает')
 
+    def last(self, bot, update):
+        poem = self.__db.last(5)
+        bot.sendMessage(update.message.chat_id, text=poem)
+
     def about(self, bot, update):
         bot.sendMessage(update.message.chat_id, text=self.__about)
     
@@ -83,6 +88,7 @@ def main():
     dp.addTelegramCommandHandler("help",   cakesBot.help)
     dp.addTelegramCommandHandler("random", cakesBot.random)
     dp.addTelegramCommandHandler("search", cakesBot.random)
+    dp.addTelegramCommandHandler("last",   cakesBot.last)
     dp.addTelegramCommandHandler("about",  cakesBot.about)
 
     # on noncommand i.e message - echo the message on Telegram
