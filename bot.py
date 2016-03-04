@@ -29,12 +29,15 @@ class CakesBot:
         self.__db = Database(user=user, password=password, database=database, host=host)
 
     def start(self, bot, update):
+        self.__message_info(update.message)
         bot.sendMessage(update.message.chat_id, text=self.__help)
 
     def help(self, bot, update):
+        self.__message_info(update.message)
         bot.sendMessage(update.message.chat_id, text=self.__help)
 
     def random(self, bot, update):
+        self.__message_info(update.message)
         word = update.message.text.strip('/random').strip()
         poem = ''
 
@@ -46,19 +49,30 @@ class CakesBot:
         bot.sendMessage(update.message.chat_id, text=poem)
 
     def search(self, bot, update):
+        self.__message_info(update.message)
         #word = update.message.text.strip('/search').strip()
         #poems = self.__db.listByWord(word)
         bot.sendMessage(update.message.chat_id, text='Извините, этот метод пока что не работает')
 
     def last(self, bot, update):
+        self.__message_info(update.message)
         poem = self.__db.last(5)
         bot.sendMessage(update.message.chat_id, text=poem)
 
     def about(self, bot, update):
+        self.__message_info(update.message)
         bot.sendMessage(update.message.chat_id, text=self.__about)
     
     def error(self, bot, update, error):
+        self.__message_info(update.message)
         logger.warn('Update "%s" caused error "%s"' % (update, error))
+
+    def __message_info(self, message):
+        user = message.from_user
+        logger.info(u'%s from %s @%s %s' % (message.text, 
+                                            user.first_name,
+                                            user.username,
+                                            user.last_name))
 
 def main():
     try:
