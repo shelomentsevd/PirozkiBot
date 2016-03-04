@@ -18,9 +18,10 @@ class Database:
         likes     = post['likes']['count']
         reposts   = post['reposts']['count']
         date      = helpers.iso8601(post['date'])
+        query     = 'INSERT INTO cakes (post_id, likes, reposts, text, date) values(%s, %s, %s, %s, %s)'
+        
         try:
-            self.__cursor.execute('INSERT INTO cakes (post_id, likes, reposts, text, date) values(%s, %s, %s, %s, %s)', 
-                (post_id, likes, reposts, text, date))
+            self.__cursor.execute(query, (post_id, likes, reposts, text, date))
             self.__db.commit()
         except:
             self.__db.rollback()
@@ -51,8 +52,17 @@ class Database:
         """
             Returns true if post with id already exists
         """
-        self.__cursor.execute('SELECT post_id FROM cakes WHERE post_id = %s' % (id))
-        result = self.__cursor.fetchone()
+        query = 'SELECT post_id FROM cakes WHERE post_id = %s'
+        result = None
+
+        try:
+            self.__cursor.execute(query, (id))
+            result = self.__cursor.fetchone()
+        except:
+            self.__db.rollback()
+            print "Exception!"
+            print query % (id)
+
         if result:
             return result[0] == id
         else:
@@ -60,11 +70,8 @@ class Database:
 
     def count(self):
         """Returns amount of poems in database"""
-        self.__cursor.execute('SELECT count(post_id) FROM cakes')
-        return self.__cursor.fetchone()[0]
-    def last(self):
-        """Returns last poem from database"""
-        self.__cursor.execute('SELECT max(post_id) FROM cakes')
+        query = 'SELECT count(post_id) FROM cakes'
+        self.__cursor.execute(query)
         return self.__cursor.fetchone()[0]
 
     def random(self):
@@ -78,8 +85,17 @@ class Database:
 
     def randomByWord(self, word):
         """Returns random poem from database which contains @word"""
-        self.__cursor.execute("SELECT text FROM cakes WHERE text @@ '%s' OFFSET( random()*( SELECT count(*) FROM cakes WHERE text @@ '%s' ) ) LIMIT 1" % (word, word));
-        result = self.__cursor.fetchone()
+        query = "SELECT text FROM cakes WHERE text @@ %s OFFSET( random()*( SELECT count(*) FROM cakes WHERE text @@ %s ) ) LIMIT 1"
+        result = None
+
+        try:
+            self.__cursor.execute(query, (word, word));
+            result = self.__cursor.fetchone()
+        except:
+            self.__db.rollback()
+            print "Exception!"
+            print query % (word, word)
+
         if result:
             return result[0]
         else:
@@ -87,8 +103,17 @@ class Database:
 
     def listByWord(self, word):
         """Returns poems list. Each poem contains @word"""
-        self.__cursor.execute("SELECT text FROM cakes WHERE text @@ '%s'" % (word))
-        dbresult = self.__cursor.fetchall()
+        query = "SELECT text FROM cakes WHERE text @@ %s"
+        dbresult = None
+
+        try:
+            self.__cursor.execute(query, (word))
+            dbresult = self.__cursor.fetchall()
+        except:
+            self.__db.rollback()
+            print "Exception!"
+            print query % (word)
+
         if dbresult:
             result = ''
             for text in dbresult:
@@ -100,8 +125,17 @@ class Database:
 
     def last(self, number):
         """Returns last @number poem"""
-        self.__cursor.execute("select text from cakes OFFSET (SELECT count(*) FROM cakes) - %s LIMIT %s" % (number, number)) 
-        dbresult = self.__cursor.fetchall()
+        query = "select text from cakes OFFSET (SELECT count(*) FROM cakes) - %s LIMIT %s"
+        dbresult = None
+        
+        try:
+            self.__cursor.execute(query ,(number, number)) 
+            dbresult = self.__cursor.fetchall()
+        except:
+            self.__db.rollback()
+            print "Exception!"
+            print query % (number, number)
+
         if dbresult:
             result = ''
             for text in dbresult:
@@ -115,6 +149,11 @@ class Database:
         """Will delete all cake-poems from database.
            DO NOT USE! ONLY FOR TEST PURPOSE!
         """
-        self.__cursor.execute('DELETE FROM cakes WHERE True')
-        self.__db.commit()
+        try:
+            self.__cursor.execute('DELETE FROM cakes WHERE True')
+            self.__db.commit()
+        except:
+            self.__db.commit()
+            return False
+
         return self.count()
