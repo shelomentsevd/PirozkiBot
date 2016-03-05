@@ -29,6 +29,29 @@ SET default_tablespace = '';
 
 SET default_with_oids = false;
 
+CREATE TABLE authors(
+    id integer NOT NULL,
+    name text NOT NULL,
+    raw_name text NOT NULL
+);
+
+ALTER TABLE public.authors OWNER TO cakesbot;
+
+CREATE SEQUENCE authors_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+ALTER TABLE public.authors_id_seq OWNER TO cakesbot;
+
+ALTER SEQUENCE authors_id_seq OWNED BY authors.id;
+
+ALTER TABLE ONLY authors ALTER COLUMN id SET DEFAULT nextval('authors_id_seq'::regclass);
+
+ALTER TABLE ONLY authors
+    ADD CONSTRAINT authors_pkey PRIMARY KEY (id);
 --
 -- Name: cakes; Type: TABLE; Schema: public; Owner: cakesbot; Tablespace: 
 --
@@ -36,6 +59,8 @@ SET default_with_oids = false;
 CREATE TABLE cakes (
     id integer NOT NULL,
     post_id integer,
+    author_id integer references authors(id),
+    poem boolean,
     likes integer NOT NULL,
     reposts integer NOT NULL,
     text text NOT NULL,
