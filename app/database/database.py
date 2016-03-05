@@ -123,11 +123,16 @@ class Database:
         else:
             return 'ничего не найдено'
 
+    def count(self):
+        query = "SELECT count(*) FROM cakes"
+        self.__cursor.execute(query)
+        return self.__cursor.fetchone()[0]
+
     def last(self, number):
         """Returns last @number poem"""
-        query = "select text from cakes OFFSET (SELECT count(*) FROM cakes) - %s LIMIT %s"
+        query = "SELECT text FROM cakes OFFSET (SELECT count(*) FROM cakes) - %s LIMIT %s"
         dbresult = None
-        
+
         try:
             self.__cursor.execute(query ,(number, number)) 
             dbresult = self.__cursor.fetchall()
@@ -144,6 +149,27 @@ class Database:
             return result
         else:
             return 'ничего не найдено'
+
+    def next(self, offset, limit):
+        query = "SELECT text, post_id FROM cakes OFFSET (SELECT count(*) FROM cakes) - %s LIMIT %s"
+        dbresult = None
+
+        try:
+            self.__cursor.execute(query, (offset, limit))
+            dbresult = self.__cursor.fetchall()
+        except:
+            self.__db.rollback()
+            print "Exception!"
+            print query % (offset, limit)
+        
+        result = []
+        if dbresult:
+            for item in dbresult:
+                text, post_id = item
+                result.append({'post_id': post_id, 'text': text})
+            return result
+        else:
+            return result
 
     def clean(self):
         """Will delete all cake-poems from database.

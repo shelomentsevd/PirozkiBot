@@ -67,4 +67,4 @@ class DatabaseTestCase(unittest.TestCase):
 
     def test_last(self):
         self.__db.insertAll(self.posts)
-        self.assertEqual(self.__db.last(), 2)
+        self.assertEqual(len(self.__db.last(2)), 2)
