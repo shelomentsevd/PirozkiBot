@@ -74,21 +74,6 @@ ALTER TABLE ONLY cakes ALTER COLUMN id SET DEFAULT nextval('cakes_id_seq'::regcl
 
 
 --
--- Data for Name: cakes; Type: TABLE DATA; Schema: public; Owner: cakesbot
---
-
-COPY cakes (id, post_id, likes, reposts, text, date) FROM stdin;
-\.
-
-
---
--- Name: cakes_id_seq; Type: SEQUENCE SET; Schema: public; Owner: cakesbot
---
-
-SELECT pg_catalog.setval('cakes_id_seq', 1, false);
-
-
---
 -- Name: cakes_pkey; Type: CONSTRAINT; Schema: public; Owner: cakesbot; Tablespace: 
 --
 
@@ -102,6 +87,13 @@ ALTER TABLE ONLY cakes
 
 ALTER TABLE ONLY cakes
     ADD CONSTRAINT cakes_post_id_key UNIQUE (post_id);
+
+
+--
+-- Name: cakes_idx; Type: INDEX; Schema: public; Owner: cakesbot; Tablespace: 
+--
+
+CREATE INDEX cakes_idx ON cakes USING gin (to_tsvector('russian'::regconfig, text));
 
 
 --
