@@ -56,7 +56,7 @@ class Database:
         result = None
 
         try:
-            self.__cursor.execute(query, (id))
+            self.__cursor.execute(query, (id,))
             result = self.__cursor.fetchone()
         except:
             self.__db.rollback()
