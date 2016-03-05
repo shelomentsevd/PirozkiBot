@@ -20,7 +20,7 @@ class CakesBot:
     /about - выводит информацию о боте
     '''
     __about = '''
-Написано just for fun из любви к стишкам.
+Написано just for fun из любви к пирожкам.
 Контент берётся отсюда: https://vk.com/perawki
 Автор: @HissingSound
     '''
