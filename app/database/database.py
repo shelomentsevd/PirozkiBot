@@ -85,7 +85,7 @@ class Database:
 
     def randomByWord(self, word):
         """Returns random poem from database which contains @word"""
-        query = "SELECT text FROM cakes WHERE text @@ %s OFFSET( random()*( SELECT count(*) FROM cakes WHERE text @@ %s ) ) LIMIT 1"
+        query = "SELECT text FROM cakes WHERE text @@ %s OFFSET floor( random()*( SELECT count(*) FROM cakes WHERE text @@ %s ) ) LIMIT 1"
         result = None
 
         try:

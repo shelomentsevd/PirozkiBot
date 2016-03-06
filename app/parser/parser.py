@@ -67,9 +67,9 @@ class Parser:
                 break
 
             try:
+                step = 10
+                offset = 0
                 while True:
-                    step = 10
-                    offset = 0
                     result = self.__getwall(self.__wall, step, offset)
                     if result:
                         if not self.__database.has(result[1]['id']):
