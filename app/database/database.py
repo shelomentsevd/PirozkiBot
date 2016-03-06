@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import pg8000
-import helpers
 
 class Database:
     """Cakes database class.
@@ -14,14 +13,13 @@ class Database:
     def insert(self, post):
         """Insert poem in database"""
         post_id   = post['id']
-        text      = helpers.makePretty(post['text'])
-        likes     = post['likes']['count']
-        reposts   = post['reposts']['count']
-        date      = helpers.iso8601(post['date'])
-        query     = 'INSERT INTO cakes (post_id, likes, reposts, text, date) values(%s, %s, %s, %s, %s)'
+        text      = post['text']
+        raw_text  = post['raw_text']
+        date      = post['date']
+        query     = 'INSERT INTO cakes (post_id, poem, raw_text, text, date) values(%s, True, %s, %s, %s)'
         
         try:
-            self.__cursor.execute(query, (post_id, likes, reposts, text, date))
+            self.__cursor.execute(query, (post_id, raw_text, text, date))
             self.__db.commit()
         except:
             self.__db.rollback()
@@ -56,8 +54,8 @@ class Database:
         result = None
 
         try:
-            self.__cursor.execute(query, (id,))
-            result = self.__cursor.fetchone()
+             self.__cursor.execute(query, (id,))
+             result = self.__cursor.fetchone()
         except:
             self.__db.rollback()
             print "Exception!"

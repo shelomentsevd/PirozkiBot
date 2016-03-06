@@ -4,6 +4,7 @@ from signal import signal, SIGINT, SIGTERM, SIGABRT
 from threading import Thread, Lock, current_thread, Event
 from time import sleep
 import json
+import helpers
 
 class Parser:
     """Parser"""
@@ -56,8 +57,23 @@ class Parser:
             r = post('http://api.vk.com/method/wall.get', data=data)
         except:
             print 'Connection reset by peer'
-            return False
+            return []
         return r.json()['response']
+
+    def preprocess(self, data):
+        result = []
+        for item in data:
+            poems = helpers.getPoems(item['text'])
+            for poem in poems:
+                ritem = dict()
+                ritem['raw_text'] = item['text']
+                ritem['text']     = poem['text']
+                ritem['date']     = helpers.iso8601(item['date'])
+                ritem['id']       = item['id']
+                result.append(ritem)
+
+        return result
+
 
     def __parse(self):
         print 'Parser thread started'
@@ -66,21 +82,24 @@ class Parser:
                 print 'Parser stopped'
                 break
 
-            try:
-                while True:
-                    step = 10
-                    offset = 0
-                    result = self.__getwall(self.__wall, step, offset)
-                    if result:
-                        if not self.__database.has(result[1]['id']):
-                            self.__database.insertAll(result[1:])
-                            offset += step
-                        else:
-                            break
+            #try:
+            step = 10
+            offset = 0
+            while True:
+                raw_result = self.__getwall(self.__wall, step, offset)
+                result = self.preprocess(raw_result[1:])
+                print "offset ", offset
+                if result:
+                    if not self.__database.has(result[0]['id']):
+                        self.__database.insertAll(result)
+                        offset += step
+                        #print "offset ", offset
                     else:
                         break
-            except:
-                print 'Unhandled exception in Parser thread'
+                else:
+                    break
+            #except:
+            #    print 'Unhandled exception in Parser thread'
 
             sleep(self.__timeout)
 
