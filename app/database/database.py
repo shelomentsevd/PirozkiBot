@@ -130,7 +130,7 @@ class Database:
 
     def last(self, number):
         """Returns last @number poem"""
-        query = "SELECT text FROM cakes OFFSET (SELECT count(*) FROM cakes) - %s LIMIT %s"
+        query = "SELECT text FROM cakes ORDER BY post_id OFFSET (SELECT count(*) FROM cakes) - %s LIMIT %s"
         dbresult = None
 
         try:
