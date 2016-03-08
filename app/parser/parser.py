@@ -66,10 +66,11 @@ class Parser:
             poems = helpers.getPoems(item['text'])
             for poem in poems:
                 ritem = dict()
-                ritem['raw_text'] = item['text']
-                ritem['text']     = poem['text']
-                ritem['date']     = helpers.iso8601(item['date'])
-                ritem['id']       = item['id']
+                ritem['raw_text']   = item['text']
+                ritem['raw_author'] = poem['author_raw']
+                ritem['text']       = poem['text']
+                ritem['date']       = helpers.iso8601(item['date'])
+                ritem['id']         = item['id']
                 result.append(ritem)
 
         return result
@@ -82,10 +83,53 @@ class Parser:
                 print 'Parser stopped'
                 break
 
+            try:
+                full = self.__database.count()
+
+                if not full:
+                    step = 100
+                    offset = 0
+                    count  = 0
+                    while True:
+                        raw_result = self.__getwall(self.__wall, step, offset)
+                        count = raw_result[0]
+                        result = self.preprocess(raw_result[1:])
+                        if result:
+                            self.__database.insertAll(result)
+                            offset += step
+                            print '%s/%s processed' % (count, offset)
+                        else:
+                            print 'Break: result is None'
+                            break
+
+                        if offset > count:
+                            print 'Done'
+                            break
+                else:
+                    step = 10
+                    offset = 0
+                    while True:
+                        raw_result = self.__getwall(self.__wall, step, offset)
+                        result = self.preprocess(raw_result[1:])
+                        print "offset ", offset
+                        if result:
+                            if not self.__database.has(result[0]['id']):
+                                self.__database.insertAll(result)
+                                offset += step
+                                #print "offset ", offset
+                            else:
+                                print 'Break Already in db'
+                                break
+                        else:
+                            print 'Break result is None'
+                            break
+                            
+            except Exception as e:
+                print e
             #try:
-            step = 10
-            offset = 0
-            while True:
+            #step = 10
+            #offset = 0
+            #while True:
                 raw_result = self.__getwall(self.__wall, step, offset)
                 result = self.preprocess(raw_result[1:])
                 print "offset ", offset
@@ -95,8 +139,10 @@ class Parser:
                         offset += step
                         #print "offset ", offset
                     else:
+                        print 'Break Already in db'
                         break
                 else:
+                    print 'Break result is None'
                     break
             #except:
             #    print 'Unhandled exception in Parser thread'

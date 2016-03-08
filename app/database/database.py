@@ -12,14 +12,15 @@ class Database:
 
     def insert(self, post):
         """Insert poem in database"""
-        post_id   = post['id']
-        text      = post['text']
-        raw_text  = post['raw_text']
-        date      = post['date']
-        query     = 'INSERT INTO cakes (post_id, poem, raw_text, text, date) values(%s, True, %s, %s, %s)'
+        post_id    = post['id']
+        text       = post['text']
+        raw_text   = post['raw_text']
+        raw_author = post['raw_author']
+        date       = post['date']
+        query      = 'INSERT INTO cakes (post_id, poem, raw_text, raw_author, text, date) values(%s, True, %s, %s, %s, %s)'
         
         try:
-            self.__cursor.execute(query, (post_id, raw_text, text, date))
+            self.__cursor.execute(query, (post_id, raw_text, raw_author, text, date))
             self.__db.commit()
         except:
             self.__db.rollback()
@@ -128,7 +129,7 @@ class Database:
 
     def last(self, number):
         """Returns last @number poem"""
-        query = "SELECT text FROM cakes OFFSET (SELECT count(*) FROM cakes) - %s LIMIT %s"
+        query = "SELECT text FROM cakes ORDER BY post_id OFFSET (SELECT count(*) FROM cakes) - %s LIMIT %s"
         dbresult = None
 
         try:

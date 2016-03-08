@@ -63,6 +63,7 @@ CREATE TABLE cakes (
     poem boolean,
     text text NOT NULL,
     raw_text text NOT NULL,
+    raw_author text NOT NULL,
     date timestamp without time zone NOT NULL
 );
 

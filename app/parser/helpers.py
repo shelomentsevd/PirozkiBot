@@ -86,8 +86,14 @@ def getPoems(raw_text):
     lines = text.split('\n')
     for item in items:
         poem = {'text':'', 'author_raw': '', 'text_raw': text}
-        for line in lines[item['start']:(item['end'] + 1)]:
+        start = item['start']
+        end   = item['end'] + 1
+        # poem
+        for line in lines[start:end]:
             poem['text'] += line + "\n"
+        # author
+        for line in lines[end:(end + 2)]:
+            poem['author_raw'] += line + "\n"
         poems.append(poem)
 
     return poems
