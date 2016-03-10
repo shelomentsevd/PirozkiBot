@@ -3,8 +3,12 @@ from app.database import Database
 from signal import signal, SIGINT, SIGTERM, SIGABRT
 from threading import Thread, Lock, current_thread, Event
 from time import sleep
+import logging
 import json
 import helpers
+
+# Enable logging
+logger = logging.getLogger(__name__)
 
 class Parser:
     """Parser"""
@@ -19,7 +23,7 @@ class Parser:
     def start(self):
         with self.__lock:
             if self.running:
-                print 'Already running'
+                logger.info('Already running')
                 return
             self.__thread = Thread(target=self.__parse, name='parser')
             self.__thread.start()
@@ -56,7 +60,7 @@ class Parser:
         try:
             r = post('http://api.vk.com/method/wall.get', data=data)
         except:
-            print 'Connection reset by peer'
+            logger.info('Connection reset by peer')
             return []
         return r.json()['response']
 
@@ -77,15 +81,15 @@ class Parser:
 
 
     def __parse(self):
-        print 'Parser thread started'
+        logger.info('Parser thread started')
         while True:
             if self.__stop_event.is_set():
-                print 'Parser stopped'
+                logger.info('Parser stopped')
                 break
 
             try:
                 full = self.__database.count()
-
+                logger.info('Count %s' % full)
                 if not full:
                     step = 100
                     offset = 0
@@ -97,57 +101,35 @@ class Parser:
                         if result:
                             self.__database.insertAll(result)
                             offset += step
-                            print '%s/%s processed' % (count, offset)
+                            logger.info('%s/%s processed' % (count, offset))
                         else:
-                            print 'Break: result is None'
+                            logger.debug('Break: result is None')
                             break
 
                         if offset > count:
-                            print 'Done'
+                            logger.info('Done')
                             break
                 else:
                     step = 10
                     offset = 0
                     while True:
+                        logger.debug('Offset %s step %s ' % (offset, step))
                         raw_result = self.__getwall(self.__wall, step, offset)
                         result = self.preprocess(raw_result[1:])
-                        print "offset ", offset
                         if result:
                             if not self.__database.has(result[0]['id']):
                                 self.__database.insertAll(result)
                                 offset += step
-                                #print "offset ", offset
                             else:
-                                print 'Break Already in db'
+                                logger.debug('Break already in database')
                                 break
                         else:
-                            print 'Break result is None'
+                            logger.debug('Break result is None')
                             break
                             
             except Exception as e:
-                print e
-            #try:
-            #step = 10
-            #offset = 0
-            #while True:
-                raw_result = self.__getwall(self.__wall, step, offset)
-                result = self.preprocess(raw_result[1:])
-                print "offset ", offset
-                if result:
-                    if not self.__database.has(result[0]['id']):
-                        self.__database.insertAll(result)
-                        offset += step
-                        #print "offset ", offset
-                    else:
-                        print 'Break Already in db'
-                        break
-                else:
-                    print 'Break result is None'
-                    break
-            #except:
-            #    print 'Unhandled exception in Parser thread'
-
+                logger.exception(e)
             sleep(self.__timeout)
 
         self.running = False
-        print 'Parser thread stopped'
+        logger.info('Parser thread stopped')
