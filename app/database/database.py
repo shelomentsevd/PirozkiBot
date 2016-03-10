@@ -60,7 +60,6 @@ class Database:
         row = self.__query_wrapper(query, (id,))
         result = False
         if row:
-            # TODO: Why self.has query returns tuple, but self.count returns array?
             result = row[0][0]
 
         return result
@@ -78,7 +77,7 @@ class Database:
         query = 'SELECT text FROM cakes OFFSET floor(random()*(SELECT count(*) FROM cakes)) LIMIT 1'
         result = self.__query_wrapper(query)
         if result:
-            return result[0]
+            return result[0][0]
         else:
             return ''
 
@@ -87,7 +86,7 @@ class Database:
         query = "SELECT text FROM cakes WHERE text @@ %s OFFSET( random()*( SELECT count(*) FROM cakes WHERE text @@ %s ) ) LIMIT 1"
         result = self.__query_wrapper(query, (word, word))
         if result:
-            return result[0]
+            return result[0][0]
         else:
             return self.listByWord(word)
 
