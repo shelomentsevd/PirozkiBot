@@ -103,8 +103,7 @@ class Parser:
                             offset += step
                             logger.info('%s/%s processed' % (count, offset))
                         else:
-                            logger.debug('Break: result is None')
-                            break
+                            continue
 
                         if offset > count:
                             logger.info('Done')

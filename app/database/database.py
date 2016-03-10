@@ -69,7 +69,7 @@ class Database:
         query = 'SELECT count(post_id) FROM cakes'
         result = self.__query_wrapper(query)
         if result:
-            return result[0]
+            return result[0][0]
         else:
             return 0
 
