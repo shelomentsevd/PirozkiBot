@@ -21,11 +21,12 @@ class Database:
         text       = post['text']
         raw_text   = post['raw_text']
         raw_author = post['raw_author']
+        author     = post['author']
         date       = post['date']
-        query      = 'INSERT INTO cakes (post_id, poem, raw_text, raw_author, text, date) values(%s, True, %s, %s, %s, %s)'
+        query      = 'INSERT INTO cakes (post_id, poem, raw_text, author, raw_author, text, date) values(%s, True, %s, %s, %s, %s, %s)'
         
         try:
-            self.__cursor.execute(query, (post_id, raw_text, raw_author, text, date))
+            self.__cursor.execute(query, (post_id, raw_text, author, raw_author, text, date))
             self.__db.commit()
         except:
             self.__db.rollback()
@@ -74,30 +75,34 @@ class Database:
 
     def random(self):
         """Returns random poem from database"""
-        query = 'SELECT text FROM cakes OFFSET floor(random()*(SELECT count(*) FROM cakes)) LIMIT 1'
-        result = self.__query_wrapper(query)
-        if result:
-            return result[0][0]
+        query = 'SELECT text, author FROM cakes OFFSET floor(random()*(SELECT count(*) FROM cakes)) LIMIT 1'
+        row = self.__query_wrapper(query)
+        if row:
+            text, author = row[0]
+            return text + author
         else:
-            return ''
+            return self.__msg_nothing_found
 
     def randomByWord(self, word):
         """Returns random poem from database which contains @word"""
-        query = "SELECT text FROM cakes WHERE text @@ %s OFFSET( random()*( SELECT count(*) FROM cakes WHERE text @@ %s ) ) LIMIT 1"
-        result = self.__query_wrapper(query, (word, word))
-        if result:
-            return result[0][0]
+        query = "SELECT text, author FROM cakes WHERE text @@ %s OFFSET( random()*( SELECT count(*) FROM cakes WHERE text @@ %s ) ) LIMIT 1"
+        row = self.__query_wrapper(query, (word, word))
+        if row:
+            text, author = row[0]
+            return text + author
         else:
             return self.listByWord(word)
 
     def listByWord(self, word):
         """Returns poems list. Each poem contains @word"""
-        query = "SELECT text FROM cakes WHERE text @@ %s"
+        query = "SELECT text, author FROM cakes WHERE text @@ %s"
         rows = self.__query_wrapper(query, (word))
         if rows:
             result = ''
-            for text in rows:
-                result += text[0]
+            for row in rows:
+                text, author = row
+                result += text
+                result += author
                 result += '\n'
             return result
         else:
@@ -105,13 +110,16 @@ class Database:
 
     def last(self, number):
         """Returns last @number poem"""
-        query = "SELECT text FROM cakes ORDER BY post_id OFFSET (SELECT count(*) FROM cakes) - %s LIMIT %s"
+        query = "SELECT text, author FROM cakes ORDER BY post_id OFFSET (SELECT count(*) FROM cakes) - %s LIMIT %s"
         rows = self.__query_wrapper(query, (number, number))
         # TODO: Ugly. Should refactor it.
         if rows:
             result = ''
-            for text in rows:
-                result += text[0]
+            for row in rows:
+                text, author = row
+                result += text
+                result += author
+                result += "\n"
                 result += "\n"
             return result
         else:

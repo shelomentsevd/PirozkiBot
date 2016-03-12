@@ -72,6 +72,7 @@ class Parser:
                 ritem = dict()
                 ritem['raw_text']   = item['text']
                 ritem['raw_author'] = poem['author_raw']
+                ritem['author']     = helpers.author(poem['author_raw'])
                 ritem['text']       = poem['text']
                 ritem['date']       = helpers.iso8601(item['date'])
                 ritem['id']         = item['id']

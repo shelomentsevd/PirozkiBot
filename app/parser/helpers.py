@@ -102,8 +102,7 @@ def author(raw_text):
     """
         Makes author nick pretty
     """
-    #TODO: club[0-9]
-    result = re.sub('\[id[0-9^\|]+\||[\]]', '', raw_text).replace('&amp;', '&').strip()
+    result = re.sub('\[(id|club)[0-9^\|]+\||[\]]', '', raw_text).replace('&amp;', '&').strip()
     return re.sub(' +', ' ', result)
 
 def makePretty(text):
