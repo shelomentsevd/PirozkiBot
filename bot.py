@@ -3,6 +3,7 @@ from telegram import Updater
 import logging
 import ConfigParser as cp
 from app.database import Database
+from signal import signal, SIGINT, SIGTERM, SIGABRT
 
 # Enable logging
 logging.basicConfig(
@@ -24,8 +25,8 @@ class CakesBot:
 Контент берётся отсюда: https://vk.com/perawki
 Автор: @HissingSound
     '''
-
-    def __init__(self, user, password, database, host):
+    def __init__(self, updater, user, password, database, host):
+        self.updater = updater
         self.__db = Database(user=user, password=password, database=database, host=host)
 
     def start(self, bot, update):
@@ -38,7 +39,8 @@ class CakesBot:
 
     def random(self, bot, update):
         self.__message_info(update.message)
-        word = update.message.text.strip('/random').strip()
+        text = update.message.text
+        word = ' '.join(text.split(' ')[1:])
         poem = ''
 
         if len(word):
@@ -50,8 +52,6 @@ class CakesBot:
 
     def search(self, bot, update):
         self.__message_info(update.message)
-        #word = update.message.text.strip('/search').strip()
-        #poems = self.__db.listByWord(word)
         bot.sendMessage(update.message.chat_id, text='Извините, этот метод пока что не работает')
 
     def last(self, bot, update):
@@ -77,6 +77,34 @@ class CakesBot:
                                             user.username,
                                             user.last_name))
 
+    def cli_unknow_command(self, bot, update):
+        logger.info('Unknow command')
+
+    def signal_handler(self, signum, frame):
+        self.is_idle = False
+        self.updater.stop()
+
+    def idle(self, stop_signals=(SIGINT, SIGTERM, SIGABRT)):
+        self.is_idle = True
+
+        for sig in stop_signals:
+            signal(sig, self.signal_handler)
+
+        self.update_queue = self.updater.start_polling(poll_interval=0.1, timeout=10)
+        
+        while self.is_idle:
+            try:
+                text = raw_input()
+            except NameError:
+                text = input()
+
+            if text == 'stop':
+                self.updater.stop()
+                break
+
+            elif len(text) > 0:
+                self.update_queue.put(text)
+
 def main():
     try:
         config = cp.ConfigParser()
@@ -98,7 +126,7 @@ def main():
     # Get the dispatcher to register handlers
     dp = updater.dispatcher
 
-    cakesBot = CakesBot(user=user, password=password, database=database, host=host)
+    cakesBot = CakesBot(updater=updater, user=user, password=password, database=database, host=host)
 
     # on different commands - answer in Telegram
     dp.addTelegramCommandHandler("start",  cakesBot.start)
@@ -108,22 +136,20 @@ def main():
     dp.addTelegramCommandHandler("last",   cakesBot.last)
     dp.addTelegramCommandHandler("about",  cakesBot.about)
 
+    # unknow telegram command handler
+    dp.addUnknownTelegramCommandHandler(cakesBot.unknow_command)
+
+    # Command line interface
+    dp.addUnknownStringCommandHandler(cakesBot.cli_unknow_command)
+
     # on noncommand i.e message - echo the message on Telegram
     dp.addTelegramMessageHandler(cakesBot.help)
 
     # log all errors
     dp.addErrorHandler(cakesBot.error)
 
-    # unknow command handler
-    dp.addUnknownTelegramCommandHandler(cakesBot.unknow_command)
-
-    # Start the Bot
-    updater.start_polling()
-
-    # Run the bot until the you presses Ctrl-C or the process receives SIGINT,
-    # SIGTERM or SIGABRT. This should be used most of the time, since
-    # start_polling() is non-blocking and will stop the bot gracefully.
-    updater.idle()
+    # start the bot
+    cakesBot.idle()
 
 if __name__ == '__main__':
     main()
