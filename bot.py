@@ -67,6 +67,9 @@ class CakesBot:
         self.__message_info(update.message)
         logger.warn('Update "%s" caused error "%s"' % (update, error))
 
+    def unknow_command(self, bot, update, *args):
+        self.help(bot, update)
+
     def __message_info(self, message):
         user = message.from_user
         logger.info(u'%s from %s @%s %s' % (message.text, 
@@ -110,6 +113,9 @@ def main():
 
     # log all errors
     dp.addErrorHandler(cakesBot.error)
+
+    # unknow command handler
+    dp.addUnknownTelegramCommandHandler(cakesBot.unknow_command)
 
     # Start the Bot
     updater.start_polling()
