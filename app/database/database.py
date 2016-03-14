@@ -50,8 +50,9 @@ class Database:
             }
         """
         for item in posts:
-            if self.insert(item):
-                logger.info('%s Added to base' % ( item['id'] ))
+            if not self.has(item['id']):
+                if self.insert(item):
+                    logger.info('%s Added to base' % ( item['id'] ))
 
     def has(self, id):
         """
@@ -100,10 +101,7 @@ class Database:
         if rows:
             result = ''
             for row in rows:
-                text, author = row
-                result += text
-                result += author
-                result += '\n'
+                result += "%s%s\n" % tuple(row)
             return result
         else:
             return self.__msg_nothing_found
@@ -112,15 +110,10 @@ class Database:
         """Returns last @number poem"""
         query = "SELECT text, author FROM cakes ORDER BY post_id OFFSET (SELECT count(*) FROM cakes) - %s LIMIT %s"
         rows = self.__query_wrapper(query, (number, number))
-        # TODO: Ugly. Should refactor it.
         if rows:
             result = ''
             for row in rows:
-                text, author = row
-                result += text
-                result += author
-                result += "\n"
-                result += "\n"
+                result += "%s%s\n\n" % tuple(row)
             return result
         else:
             return self.__msg_nothing_found
@@ -149,10 +142,9 @@ class Database:
             self.__cursor.execute(query, args)
             result = self.__cursor.fetchall()
             return result
-        except:
+        except Exception as inst:
             self.__db.rollback()
-            logger.info('Exception!')
-            logger.info('Q: %s', (query % args))
+            logger.warn('Exception: %s' % inst)
             return None
 
     def clean(self):
