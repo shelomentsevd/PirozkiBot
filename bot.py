@@ -47,13 +47,12 @@ class CakesBot:
         self.__message_info(update.message)
         bot.sendMessage(update.message.chat_id, text=self.__help)
 
-    def random(self, bot, update):
+    def random(self, bot, update, args):
         self.__message_info(update.message)
-        text = update.message.text
-        word = ' '.join(text.split(' ')[1:])
         poem = ''
-
-        if len(word):
+        
+        if args:
+            word = ' '.join(args)
             poem = self.__db.randomByWord(word)
         else:
             poem = self.__db.random()
@@ -74,7 +73,7 @@ class CakesBot:
                 text += poem
         else:
             text = 'Ничего не найдено'
-        
+
         bot.sendMessage(update.message.chat_id, text=text)
 
     def about(self, bot, update, args):
