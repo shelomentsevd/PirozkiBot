@@ -85,31 +85,29 @@ class Database:
 
     def randomByWord(self, word):
         """Returns random poem from database which contains @word"""
-        query = "SELECT text, author FROM cakes WHERE text @@ %s OFFSET( random()*( SELECT count(*) FROM cakes WHERE text @@ %s ) ) LIMIT 1"
+        query = 'SELECT text, author FROM cakes WHERE text @@ %s OFFSET( random()*( SELECT count(*) FROM cakes WHERE text @@ %s ) ) LIMIT 1'
         row = self.__query_wrapper(query, (word, word))
         if row:
             return ''.join(row[0])
         else:
-            return self.listByWord(word)
+            return self.__msg_nothing_found
 
     def listByWord(self, word):
         """Returns poems list. Each poem contains @word"""
-        query = "SELECT text, author FROM cakes WHERE text @@ %s LIMIT 5"
-        rows = self.__query_wrapper(query, (word))
+        query = 'SELECT text, author FROM cakes WHERE text @@ %s LIMIT 5'
+        rows = self.__query_wrapper(query, (word,))
         result = list()
         if rows:
             for row in rows:
-                item = "%s%s\n\n" % tuple(row)
+                item = dict()
+                item['text'], item['author'] = row
                 result.append(item)
-            return result
-        else:
-            result.append(self.__msg_nothing_found)
 
         return result
 
     def last(self, number):
         """Returns last @number poem"""
-        query = "SELECT text, author FROM cakes ORDER BY post_id OFFSET (SELECT count(*) FROM cakes) - %s LIMIT %s"
+        query = 'SELECT text, author FROM cakes ORDER BY post_id OFFSET (SELECT count(*) FROM cakes) - %s LIMIT %s'
         rows = self.__query_wrapper(query, (number, number))
         result = list()
         if rows:
@@ -123,7 +121,7 @@ class Database:
 
     # TODO: Didn't remember why i wrote it...
     def next(self, offset, limit):
-        query = "SELECT text, post_id FROM cakes OFFSET (SELECT count(*) FROM cakes) - %s LIMIT %s"
+        query = 'SELECT text, post_id FROM cakes OFFSET (SELECT count(*) FROM cakes) - %s LIMIT %s'
         rows = self.__query_wrapper(query, (offset, limit))
 
         result = list()

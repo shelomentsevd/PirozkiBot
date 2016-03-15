@@ -79,10 +79,14 @@ class CakesBot:
         if update.inline_query:
             query = update.inline_query.query
             results = list()
-            poems = self.__db.listByWord(query)
-            if poems:
-                for poem in poems:
-                    results.append(InlineQueryResultArticle(id=hex(getrandbits(64))[2:], title="%s" % query, message_text=poem))
+            if query:
+                poems = self.__db.listByWord(query)
+                if poems:
+                    for poem in poems:
+                        results.append(InlineQueryResultArticle(id=hex(getrandbits(64))[2:], 
+                                                                title=poem['author'], 
+                                                                message_text=poem['text'], 
+                                                                description=poem['text']))
 
             bot.answerInlineQuery(update.inline_query.id, results)
 
@@ -163,9 +167,6 @@ def main():
 
     # Command line interface
     dp.addUnknownStringCommandHandler(cakesBot.cli_unknow_command)
-
-    # on noncommand i.e message - echo the message on Telegram
-    dp.addTelegramMessageHandler(cakesBot.help)
 
     # log all errors
     dp.addErrorHandler(cakesBot.error)
