@@ -85,9 +85,10 @@ class CakesBot:
                 poems = self.__db.listByWord(query)
                 if poems:
                     for poem in poems:
+                        message = poem['text'] + poem['author']
                         results.append(InlineQueryResultArticle(id=hex(getrandbits(64))[2:], 
                                                                 title=poem['author'], 
-                                                                message_text=poem['text'], 
+                                                                message_text=message, 
                                                                 description=poem['text']))
 
             bot.answerInlineQuery(update.inline_query.id, results)
