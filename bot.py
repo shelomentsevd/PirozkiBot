@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-from telegram import Updater
+from telegram import Updater, InlineQueryResultArticle, ParseMode
+import re
 import logging
 import ConfigParser as cp
 from app.database import Database
@@ -11,6 +12,11 @@ logging.basicConfig(
         level=logging.INFO)
 
 logger = logging.getLogger(__name__)
+
+def escape_markdown(text):
+    """Helper function to escape telegram markup symbols"""
+    escape_chars = '\*_`\['
+    return re.sub(r'([%s])' % escape_chars, r'\\\1', text)
 
 class CakesBot:
     __help = '''
@@ -54,19 +60,34 @@ class CakesBot:
 
         bot.sendMessage(update.message.chat_id, text=poem)
 
-    def search(self, bot, update):
+    def search(self, bot, update, args):
         self.__message_info(update.message)
         bot.sendMessage(update.message.chat_id, text='Извините, этот метод пока что не работает')
 
     def last(self, bot, update):
         self.__message_info(update.message)
-        poem = self.__db.last(5)
-        bot.sendMessage(update.message.chat_id, text=poem)
+        poems = self.__db.last(5)
+        text  = ''
+        
+        if poems:
+            for poem in poems:
+                text += poem
+        else:
+            text = 'Ничего не найдено'
+        
+        bot.sendMessage(update.message.chat_id, text=text)
 
-    def about(self, bot, update):
+    def about(self, bot, update, args):
         self.__message_info(update.message)
         bot.sendMessage(update.message.chat_id, text=self.__about % self.__db.count())
-    
+
+    def inline_search(self, bot, update):
+        if update.inline_query:
+            query = update.inline_query.query
+            results = list()
+            results.append(InlineQueryResultArticle(id=1, title="%s" % query, message_text="Not implemented"))
+            bot.answerInlineQuery(update.inline_query.id, results)
+
     def error(self, bot, update, error):
         self.__message_info(update.message)
         logger.warn('Update "%s" caused error "%s"' % (update, error))
@@ -139,7 +160,7 @@ def main():
     dp.addTelegramCommandHandler("search", cakesBot.random)
     dp.addTelegramCommandHandler("last",   cakesBot.last)
     dp.addTelegramCommandHandler("about",  cakesBot.about)
-
+    dp.addTelegramInlineHandler(cakesBot.inline_search)
     # unknow telegram command handler
     dp.addUnknownTelegramCommandHandler(cakesBot.unknow_command)
 

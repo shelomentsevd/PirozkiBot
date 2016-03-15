@@ -110,13 +110,13 @@ class Database:
         """Returns last @number poem"""
         query = "SELECT text, author FROM cakes ORDER BY post_id OFFSET (SELECT count(*) FROM cakes) - %s LIMIT %s"
         rows = self.__query_wrapper(query, (number, number))
+        result = list()
         if rows:
-            result = ''
             for row in rows:
-                result += "%s%s\n\n" % tuple(row)
-            return result
-        else:
-            return self.__msg_nothing_found
+                item = "%s%s\n\n" % tuple(row)
+                result.append(item)
+
+        return result
 
     # TODO: Didn't remember why i wrote it...
     def next(self, offset, limit):
