@@ -19,9 +19,13 @@ class CakesBot:
     /random - присылает вам случайный пирожок, если после /random написать несколько слов, вы получите случайный пирожок содержащий эти слова
     /help  - выводит эту справку
     /about - выводит информацию о боте
+    
+    вы можете проголосовать за бота по ссылке:
+    https://telegram.me/storebot?start=pirozkibot
     '''
     __about = '''
-Написано just for fun из любви к пирожкам.
+Загружено %s пирожка
+Написано just for fun.
 Контент берётся отсюда: https://vk.com/perawki
 Автор: @HissingSound
     '''
@@ -61,7 +65,7 @@ class CakesBot:
 
     def about(self, bot, update):
         self.__message_info(update.message)
-        bot.sendMessage(update.message.chat_id, text=self.__about)
+        bot.sendMessage(update.message.chat_id, text=self.__about % self.__db.count())
     
     def error(self, bot, update, error):
         self.__message_info(update.message)
