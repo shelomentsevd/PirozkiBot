@@ -5,6 +5,7 @@ import logging
 import ConfigParser as cp
 from app.database import Database
 from signal import signal, SIGINT, SIGTERM, SIGABRT
+from random import getrandbits
 
 # Enable logging
 logging.basicConfig(
@@ -50,7 +51,7 @@ class CakesBot:
     def random(self, bot, update, args):
         self.__message_info(update.message)
         poem = ''
-        
+
         if args:
             word = ' '.join(args)
             poem = self.__db.randomByWord(word)
@@ -58,10 +59,6 @@ class CakesBot:
             poem = self.__db.random()
 
         bot.sendMessage(update.message.chat_id, text=poem)
-
-    def search(self, bot, update, args):
-        self.__message_info(update.message)
-        bot.sendMessage(update.message.chat_id, text='Извините, этот метод пока что не работает')
 
     def last(self, bot, update):
         self.__message_info(update.message)
@@ -71,8 +68,6 @@ class CakesBot:
         if poems:
             for poem in poems:
                 text += poem
-        else:
-            text = 'Ничего не найдено'
 
         bot.sendMessage(update.message.chat_id, text=text)
 
@@ -84,7 +79,11 @@ class CakesBot:
         if update.inline_query:
             query = update.inline_query.query
             results = list()
-            results.append(InlineQueryResultArticle(id=1, title="%s" % query, message_text="Not implemented"))
+            poems = self.__db.listByWord(query)
+            if poems:
+                for poem in poems:
+                    results.append(InlineQueryResultArticle(id=hex(getrandbits(64))[2:], title="%s" % query, message_text=poem))
+
             bot.answerInlineQuery(update.inline_query.id, results)
 
     def error(self, bot, update, error):
@@ -156,7 +155,6 @@ def main():
     dp.addTelegramCommandHandler("start",  cakesBot.start)
     dp.addTelegramCommandHandler("help",   cakesBot.help)
     dp.addTelegramCommandHandler("random", cakesBot.random)
-    dp.addTelegramCommandHandler("search", cakesBot.random)
     dp.addTelegramCommandHandler("last",   cakesBot.last)
     dp.addTelegramCommandHandler("about",  cakesBot.about)
     dp.addTelegramInlineHandler(cakesBot.inline_search)

@@ -79,8 +79,7 @@ class Database:
         query = 'SELECT text, author FROM cakes OFFSET floor(random()*(SELECT count(*) FROM cakes)) LIMIT 1'
         row = self.__query_wrapper(query)
         if row:
-            text, author = row[0]
-            return text + author
+            return ''.join(row[0])
         else:
             return self.__msg_nothing_found
 
@@ -89,22 +88,24 @@ class Database:
         query = "SELECT text, author FROM cakes WHERE text @@ %s OFFSET( random()*( SELECT count(*) FROM cakes WHERE text @@ %s ) ) LIMIT 1"
         row = self.__query_wrapper(query, (word, word))
         if row:
-            text, author = row[0]
-            return text + author
+            return ''.join(row[0])
         else:
             return self.listByWord(word)
 
     def listByWord(self, word):
         """Returns poems list. Each poem contains @word"""
-        query = "SELECT text, author FROM cakes WHERE text @@ %s"
+        query = "SELECT text, author FROM cakes WHERE text @@ %s LIMIT 5"
         rows = self.__query_wrapper(query, (word))
+        result = list()
         if rows:
-            result = ''
             for row in rows:
-                result += "%s%s\n" % tuple(row)
+                item = "%s%s\n\n" % tuple(row)
+                result.append(item)
             return result
         else:
-            return self.__msg_nothing_found
+            result.append(self.__msg_nothing_found)
+
+        return result
 
     def last(self, number):
         """Returns last @number poem"""
@@ -115,6 +116,8 @@ class Database:
             for row in rows:
                 item = "%s%s\n\n" % tuple(row)
                 result.append(item)
+        else:
+            result.append(self.__msg_nothing_found)
 
         return result
 
