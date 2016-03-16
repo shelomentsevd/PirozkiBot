@@ -79,9 +79,14 @@ class CakesBot:
 
     def inline_search(self, bot, update):
         if update.inline_query:
+            user = update.inline_query.from_user
             query = update.inline_query.query
             results = list()
             if query:
+                logger.info('Inline: %s from %s @%s %s' % (query, 
+                                                   user.first_name,
+                                                   user.username,
+                                                   user.last_name))
                 poems = self.__db.listByWord(query)
                 if poems:
                     for poem in poems:
