@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from requests import post
 from app.database import Database
 from signal import signal, SIGINT, SIGTERM, SIGABRT

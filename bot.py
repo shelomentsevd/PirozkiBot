@@ -21,22 +21,22 @@ def escape_markdown(text):
 
 class CakesBot:
     __help = '''
+    Напишите боту какое-нибудь слово, что бы получить случайный пирожок с этим словом.
 Доступные команды:
     /last - присылает пять последних пирожков
-    /random - присылает вам случайный пирожок, если после /random написать несколько слов, вы получите случайный пирожок содержащий эти слова
+    /random - присылает вам случайный пирожок
     /help  - выводит эту справку
     /about - выводит информацию о боте
 Поиск по пирожкам доступен из любого чата, нужно написать имя бота @pirozkibot и слова которые должны содержаться в пирожке.
 Например "@pirozkibot олег" 
-    
-    Вы можете проголосовать за бота по ссылке:
-    https://telegram.me/storebot?start=pirozkibot
     '''
     __about = '''
 Загружено %s пирожка
 Написано just for fun.
 Контент берётся отсюда: https://vk.com/perawki
-Автор: @HissingSound
+Вы можете проголосовать за бота по ссылке:
+https://telegram.me/storebot?start=pirozkibot
+Автор бота: @HissingSound
     '''
     def __init__(self, updater, user, password, database, host):
         self.updater = updater
@@ -105,6 +105,11 @@ class CakesBot:
     def unknow_command(self, bot, update, *args):
         self.help(bot, update)
 
+    def message(self, bot, update):
+        self.__message_info(update.message)
+        poem = self.__db.randomByWord(update.message.text)
+        bot.sendMessage(update.message.chat_id, text=poem)
+
     def __message_info(self, message):
         user = message.from_user
         logger.info(u'%s from %s @%s %s' % (message.text, 
@@ -172,6 +177,7 @@ def main():
     dp.addTelegramInlineHandler(cakesBot.inline_search)
     # unknow telegram command handler
     dp.addUnknownTelegramCommandHandler(cakesBot.unknow_command)
+    dp.addTelegramMessageHandler(cakesBot.message)
 
     # Command line interface
     dp.addUnknownStringCommandHandler(cakesBot.cli_unknow_command)
