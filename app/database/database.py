@@ -1,3 +1,4 @@
+# Author: Dmitriy Shelomentsev (shelomentsev@protonmail.ch)
 # -*- coding: utf-8 -*-
 import logging
 import pg8000

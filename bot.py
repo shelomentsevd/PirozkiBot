@@ -1,3 +1,4 @@
+# Author: Dmitriy Shelomentsev (shelomentsev@protonmail.ch)
 # -*- coding: utf-8 -*-
 from telegram import Updater, InlineQueryResultArticle, ParseMode
 import re

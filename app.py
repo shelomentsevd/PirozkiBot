@@ -1,3 +1,5 @@
+# Author: Dmitriy Shelomentsev (shelomentsev@protonmail.ch)
+# -*- coding: utf-8 -*-
 import sys
 import ConfigParser as cp
 import logging
