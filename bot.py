@@ -1,6 +1,7 @@
 # Author: Dmitriy Shelomentsev (shelomentsev@protonmail.ch)
 # -*- coding: utf-8 -*-
 from telegram import Updater, InlineQueryResultArticle, ParseMode
+from telegram.utils.botan import Botan
 import re
 import logging
 import ConfigParser as cp
@@ -39,20 +40,22 @@ class CakesBot:
 https://telegram.me/storebot?start=pirozkibot
 Автор бота: @HissingSound
     '''
-    def __init__(self, updater, user, password, database, host):
+    def __init__(self, updater, user, password, database, host='localhost', botan_token=''):
         self.updater = updater
+        if botan_token:
+            self.botan = Botan(botan_token)
         self.__db = Database(user=user, password=password, database=database, host=host)
 
     def start(self, bot, update):
-        self.__message_info(update.message)
+        self.__message_info(update.message, 'start')
         bot.sendMessage(update.message.chat_id, text=self.__help)
 
     def help(self, bot, update):
-        self.__message_info(update.message)
+        self.__message_info(update.message, 'help')
         bot.sendMessage(update.message.chat_id, text=self.__help)
 
     def random(self, bot, update, args):
-        self.__message_info(update.message)
+        self.__message_info(update.message, 'random')
         poem = ''
 
         if args:
@@ -64,7 +67,7 @@ https://telegram.me/storebot?start=pirozkibot
         bot.sendMessage(update.message.chat_id, text=poem)
 
     def last(self, bot, update):
-        self.__message_info(update.message)
+        self.__message_info(update.message, 'last')
         poems = self.__db.last(5)
         text  = ''
         
@@ -75,7 +78,7 @@ https://telegram.me/storebot?start=pirozkibot
         bot.sendMessage(update.message.chat_id, text=text)
 
     def about(self, bot, update, args):
-        self.__message_info(update.message)
+        self.__message_info(update.message, 'about')
         bot.sendMessage(update.message.chat_id, text=self.__about % self.__db.count())
 
     def inline_search(self, bot, update):
@@ -100,18 +103,23 @@ https://telegram.me/storebot?start=pirozkibot
             bot.answerInlineQuery(update.inline_query.id, results)
 
     def error(self, bot, update, error):
-        self.__message_info(update.message)
+        self.__message_info(update.message, 'error')
         logger.warn('Update "%s" caused error "%s"' % (update, error))
 
     def unknow_command(self, bot, update, *args):
-        self.help(bot, update)
+        self.__message_info(update.message)
 
     def message(self, bot, update):
-        self.__message_info(update.message)
+        self.__message_info(update.message, 'message')
         poem = self.__db.randomByWord(update.message.text)
         bot.sendMessage(update.message.chat_id, text=poem)
 
-    def __message_info(self, message):
+    def __message_info(self, message, command='unknow'):
+        if self.botan:
+            self.botan.track(
+                message=message,
+                event_name=command
+            )
         user = message.from_user
         logger.info(u'%s from %s @%s %s' % (message.text, 
                                             user.first_name,
@@ -157,6 +165,8 @@ def main():
         host      = config.get('database', 'host')
         # telegram bot section
         token     = config.get('bot', 'token')
+        # botan.io analytics
+        botan_token = config.get('botan', 'token')
     except:
         logger.error('Configure file error')
         sys.exit()
@@ -167,7 +177,7 @@ def main():
     # Get the dispatcher to register handlers
     dp = updater.dispatcher
 
-    cakesBot = CakesBot(updater=updater, user=user, password=password, database=database, host=host)
+    cakesBot = CakesBot(updater=updater, user=user, password=password, database=database, host=host, botan_token=botan_token)
 
     # on different commands - answer in Telegram
     dp.addTelegramCommandHandler("start",  cakesBot.start)
