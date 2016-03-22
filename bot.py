@@ -1,6 +1,7 @@
 # Author: Dmitriy Shelomentsev (shelomentsev@protonmail.ch)
 # -*- coding: utf-8 -*-
-from telegram import Updater, InlineQueryResultArticle, ParseMode
+from telegram import InlineQueryResultArticle, ParseMode
+from telegram.ext import Updater
 from telegram.utils.botan import Botan
 import re
 import logging
