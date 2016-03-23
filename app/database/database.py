@@ -124,14 +124,8 @@ class Database:
                    WHERE text @@ %s
                    LIMIT 5'''
         rows = self.__query_wrapper(query, (word,))
-        result = list()
-        if rows:
-            for row in rows:
-                item = dict()
-                item['text'], item['author'] = row
-                result.append(item)
-
-        return result
+        return [{'text': row[0],
+                 'author': row[1]} for row in rows]
 
     def last(self, number):
         """Returns last @number poem"""
@@ -141,32 +135,10 @@ class Database:
                    OFFSET (SELECT count(*) FROM cakes) - %s
                    LIMIT %s'''
         rows = self.__query_wrapper(query, (number, number))
-        result = list()
-        if rows:
-            for row in rows:
-                item = "%s%s\n\n" % tuple(row)
-                result.append(item)
+        if not rows:
+            return [self.__msg_nothing_found]
         else:
-            result.append(self.__msg_nothing_found)
-
-        return result
-
-    # TODO: Didn't remember why i wrote it...
-    def next(self, offset, limit):
-        query = '''SELECT text, post_id
-                   FROM cakes
-                   OFFSET (SELECT count(*) FROM cakes) - %s
-                   LIMIT %s'''
-        rows = self.__query_wrapper(query, (offset, limit))
-
-        result = list()
-        if rows:
-            for row in rows:
-                text, post_id = row
-                result.append({'post_id': post_id, 'text': text})
-            return result
-        else:
-            return result
+            return ["%s%s\n\n" % tuple(row) for row in rows]
 
     def __query_wrapper(self, query, args=()):
         """
