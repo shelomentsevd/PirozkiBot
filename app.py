@@ -4,7 +4,7 @@ import sys
 import ConfigParser as cp
 import logging
 from app.database import Database
-from app.parser import Parser 
+from app.parser import Parser
 
 # Enable logging
 logging.basicConfig(
@@ -13,17 +13,18 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
+
 def main():
     try:
         config = cp.ConfigParser()
         config.read('./app/conf/main.ini')
-        #database section
-        user     = config.get('database', 'user')
+        # database section
+        user = config.get('database', 'user')
         password = config.get('database', 'password')
         database = config.get('database', 'database')
-        host     = config.get('database', 'host')
-        #other section
-        wall   = config.get('other', 'wall')
+        host = config.get('database', 'host')
+        # other section
+        wall = config.get('other', 'wall')
         update = config.getfloat('other', 'update')
     except:
         logger.error('Config file error')
@@ -37,7 +38,10 @@ def main():
     logger.info('Wall: %s' % wall)
     logger.info('Update in seconds: %s' % update)
 
-    db = Database(user=user, password=password, database=database, host=host)
+    db = Database(user=user,
+                  password=password,
+                  database=database,
+                  host=host)
     parser = Parser(wall, update, db)
     parser.start()
     parser.idle()
