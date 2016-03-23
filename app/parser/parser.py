@@ -12,6 +12,7 @@ import helpers
 # Enable logging
 logger = logging.getLogger(__name__)
 
+
 class Parser:
     """Parser"""
     def __init__(self, wall, timeout, database):
@@ -55,7 +56,7 @@ class Parser:
 
     def __getwall(self, owner, count, offset):
         data = {
-            'owner_id':owner,
+            'owner_id': owner,
             'count': count,
             'offset': offset
         }
@@ -72,16 +73,15 @@ class Parser:
             poems = helpers.getPoems(item['text'])
             for poem in poems:
                 ritem = dict()
-                ritem['raw_text']   = item['text']
+                ritem['raw_text'] = item['text']
                 ritem['raw_author'] = poem['author_raw']
-                ritem['author']     = helpers.author(poem['author_raw'])
-                ritem['text']       = poem['text']
-                ritem['date']       = helpers.iso8601(item['date'])
-                ritem['id']         = item['id']
+                ritem['author'] = helpers.author(poem['author_raw'])
+                ritem['text'] = poem['text']
+                ritem['date'] = helpers.iso8601(item['date'])
+                ritem['id'] = item['id']
                 result.append(ritem)
 
         return result
-
 
     def __parse(self):
         logger.info('Parser thread started')
@@ -96,7 +96,7 @@ class Parser:
                 if not full:
                     step = 100
                     offset = 0
-                    count  = 0
+                    count = 0
                     while True:
                         raw_result = self.__getwall(self.__wall, step, offset)
                         count = raw_result[0]
@@ -128,7 +128,6 @@ class Parser:
                         else:
                             logger.debug('Break result is None')
                             break
-                            
             except Exception as e:
                 logger.exception(e)
             sleep(self.__timeout)
