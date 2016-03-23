@@ -17,21 +17,16 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
-def escape_markdown(text):
-    """Helper function to escape telegram markup symbols"""
-    escape_chars = '\*_`\['
-    return re.sub(r'([%s])' % escape_chars, r'\\\1', text)
 
 class CakesBot:
-    __help = '''
-    Напишите боту какое-нибудь слово, что бы получить случайный пирожок с этим словом.
+    __help = '''Напишите боту слово, что бы получить случайный пирожок с ним.
 Доступные команды:
     /last - присылает пять последних пирожков
     /random - присылает вам случайный пирожок
     /help  - выводит эту справку
     /about - выводит информацию о боте
-Поиск по пирожкам доступен из любого чата, нужно написать имя бота @pirozkibot и слова которые должны содержаться в пирожке.
-Например "@pirozkibot олег" 
+Для поиска напишите в чате имя бота и ключевые слова. Пример:
+    @pirozkibot олег
     '''
     __about = '''
 Загружено %s пирожка
@@ -41,11 +36,12 @@ class CakesBot:
 https://telegram.me/storebot?start=pirozkibot
 Автор бота: @HissingSound
     '''
-    def __init__(self, updater, user, password, database, host='localhost', botan_token=''):
+
+    def __init__(self,  updater, database, botan_token=''):
         self.updater = updater
         if botan_token:
             self.botan = Botan(botan_token)
-        self.__db = Database(user=user, password=password, database=database, host=host)
+        self.__db = database
 
     def start(self, bot, update):
         self.__message_info(update.message, 'start')
@@ -70,17 +66,12 @@ https://telegram.me/storebot?start=pirozkibot
     def last(self, bot, update):
         self.__message_info(update.message, 'last')
         poems = self.__db.last(5)
-        text  = ''
-        
-        if poems:
-            for poem in poems:
-                text += poem
-
-        bot.sendMessage(update.message.chat_id, text=text)
+        bot.sendMessage(update.message.chat_id, text=''.join(poems))
 
     def about(self, bot, update, args):
         self.__message_info(update.message, 'about')
-        bot.sendMessage(update.message.chat_id, text=self.__about % self.__db.count())
+        bot.sendMessage(update.message.chat_id,
+                        text=self.__about % self.__db.count())
 
     def inline_search(self, bot, update):
         if update.inline_query:
@@ -88,18 +79,21 @@ https://telegram.me/storebot?start=pirozkibot
             query = update.inline_query.query
             results = list()
             if query:
-                logger.info('Inline: %s from %s @%s %s' % (query, 
-                                                   user.first_name,
-                                                   user.username,
-                                                   user.last_name))
+                logger.info('Inline: %s from %s @%s %s' % (query,
+                                                           user.first_name,
+                                                           user.username,
+                                                           user.last_name))
                 poems = self.__db.listByWord(query)
                 if poems:
                     for poem in poems:
-                        message = poem['text'] + poem['author']
-                        results.append(InlineQueryResultArticle(id=hex(getrandbits(64))[2:], 
-                                                                title=poem['author'], 
-                                                                message_text=message, 
-                                                                description=poem['text']))
+                        text, author = poem['text'], poem['author']
+                        msg = text + author
+                        uniqueId = hex(getrandbits(64))[2:]
+                        article = InlineQueryResultArticle(id=uniqueId,
+                                                           title=author,
+                                                           message_text=msg,
+                                                           description=text)
+                        results.append(article)
 
             bot.answerInlineQuery(update.inline_query.id, results)
 
@@ -122,7 +116,7 @@ https://telegram.me/storebot?start=pirozkibot
                 event_name=command
             )
         user = message.from_user
-        logger.info(u'%s from %s @%s %s' % (message.text, 
+        logger.info(u'%s from %s @%s %s' % (message.text,
                                             user.first_name,
                                             user.username,
                                             user.last_name))
@@ -140,8 +134,9 @@ https://telegram.me/storebot?start=pirozkibot
         for sig in stop_signals:
             signal(sig, self.signal_handler)
 
-        self.update_queue = self.updater.start_polling(poll_interval=0.1, timeout=10)
-        
+        self.update_queue = self.updater.start_polling(poll_interval=0.1,
+                                                       timeout=10)
+
         while self.is_idle:
             try:
                 text = raw_input()
@@ -155,17 +150,18 @@ https://telegram.me/storebot?start=pirozkibot
             elif len(text) > 0:
                 self.update_queue.put(text)
 
+
 def main():
     try:
         config = cp.ConfigParser()
         config.read('./app/conf/main.ini')
-        #database section
-        user      = config.get('database', 'user')
-        password  = config.get('database', 'password')
-        database  = config.get('database', 'database')
-        host      = config.get('database', 'host')
+        # database section
+        user = config.get('database', 'user')
+        password = config.get('database', 'password')
+        database = config.get('database', 'database')
+        host = config.get('database', 'host')
         # telegram bot section
-        token     = config.get('bot', 'token')
+        token = config.get('bot', 'token')
         # botan.io analytics
         botan_token = config.get('botan', 'token')
     except:
@@ -177,8 +173,15 @@ def main():
 
     # Get the dispatcher to register handlers
     dp = updater.dispatcher
-
-    cakesBot = CakesBot(updater=updater, user=user, password=password, database=database, host=host, botan_token=botan_token)
+    # Connect to database
+    botDB = Database(user=user,
+                     password=password,
+                     database=database,
+                     host=host)
+    # Main class
+    cakesBot = CakesBot(updater=updater,
+                        database=botDB,
+                        botan_token=botan_token)
 
     # on different commands - answer in Telegram
     dp.addTelegramCommandHandler("start",  cakesBot.start)
