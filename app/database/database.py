@@ -5,29 +5,40 @@ import pg8000
 
 logger = logging.getLogger(__name__)
 
+
 class Database:
     """Cakes database class.
        Wrap above pg8000 and PostgreSQL
        Isn't thread safe!"""
 
     __msg_nothing_found = 'ничего не найдено'
+
     def __init__(self, user, password, database, host):
         """Connect to database"""
-        self.__db = pg8000.connect(user=user, password=password, database=database, host=host)
+        self.__db = pg8000.connect(user=user,
+                                   password=password,
+                                   database=database,
+                                   host=host)
         self.__cursor = self.__db.cursor()
 
     def insert(self, post):
         """Insert poem in database"""
-        post_id    = post['id']
-        text       = post['text']
-        raw_text   = post['raw_text']
+        post_id = post['id']
+        text = post['text']
+        raw_text = post['raw_text']
         raw_author = post['raw_author']
-        author     = post['author']
-        date       = post['date']
-        query      = 'INSERT INTO cakes (post_id, poem, raw_text, author, raw_author, text, date) values(%s, True, %s, %s, %s, %s, %s)'
-        
+        author = post['author']
+        date = post['date']
+        query = '''INSERT INTO cakes (post_id, poem, raw_text, author, raw_author, text, date)
+                               values(%s, True, %s, %s, %s, %s, %s)'''
+
         try:
-            self.__cursor.execute(query, (post_id, raw_text, author, raw_author, text, date))
+            self.__cursor.execute(query, (post_id,
+                                          raw_text,
+                                          author,
+                                          raw_author,
+                                          text,
+                                          date))
             self.__db.commit()
         except:
             self.__db.rollback()
@@ -37,7 +48,7 @@ class Database:
 
     def insertAll(self, posts):
         """Insert poems in database
-           Each item in posts should be like this: 
+           Each item in posts should be like this:
            {
                 'text': '',
                 'likes': {
@@ -53,19 +64,22 @@ class Database:
         for item in posts:
             if not self.has(item['id']):
                 if self.insert(item):
-                    logger.info('%s Added to base' % ( item['id'] ))
+                    logger.info('%s Added to base' % (item['id']))
 
     def has(self, id):
         """
             Returns true if post with id already exists
         """
-        query = 'SELECT EXISTS ( SELECT post_id FROM cakes WHERE post_id = %s )'
+        query = '''SELECT EXISTS ( SELECT post_id
+                                   FROM cakes
+                                   WHERE post_id = %s )'''
         row = self.__query_wrapper(query, (id,))
         result = False
         if row:
             result = row[0][0]
 
         return result
+
     def count(self):
         """Returns amount of poems in database"""
         query = 'SELECT count(post_id) FROM cakes'
@@ -77,7 +91,11 @@ class Database:
 
     def random(self):
         """Returns random poem from database"""
-        query = 'SELECT text, author FROM cakes OFFSET floor(random()*(SELECT count(*) FROM cakes)) LIMIT 1'
+        query = '''SELECT text, author
+                   FROM cakes
+                   OFFSET floor(random()*(SELECT count(*)
+                                          FROM cakes))
+                   LIMIT 1'''
         row = self.__query_wrapper(query)
         if row:
             return ''.join(row[0])
@@ -86,7 +104,13 @@ class Database:
 
     def randomByWord(self, word):
         """Returns random poem from database which contains @word"""
-        query = 'SELECT text, author FROM cakes WHERE text @@ %s OFFSET( random()*( SELECT count(*) FROM cakes WHERE text @@ %s ) ) LIMIT 1'
+        query = '''SELECT text, author
+                   FROM cakes
+                   WHERE text @@ %s
+                   OFFSET( random()*( SELECT count(*)
+                                      FROM cakes
+                                      WHERE text @@ %s ) )
+                   LIMIT 1'''
         row = self.__query_wrapper(query, (word, word))
         if row:
             return ''.join(row[0])
@@ -95,7 +119,10 @@ class Database:
 
     def listByWord(self, word):
         """Returns poems list. Each poem contains @word"""
-        query = 'SELECT text, author FROM cakes WHERE text @@ %s LIMIT 5'
+        query = '''SELECT text, author
+                   FROM cakes
+                   WHERE text @@ %s
+                   LIMIT 5'''
         rows = self.__query_wrapper(query, (word,))
         result = list()
         if rows:
@@ -108,7 +135,11 @@ class Database:
 
     def last(self, number):
         """Returns last @number poem"""
-        query = 'SELECT text, author FROM cakes ORDER BY post_id OFFSET (SELECT count(*) FROM cakes) - %s LIMIT %s'
+        query = '''SELECT text, author
+                   FROM cakes
+                   ORDER BY post_id
+                   OFFSET (SELECT count(*) FROM cakes) - %s
+                   LIMIT %s'''
         rows = self.__query_wrapper(query, (number, number))
         result = list()
         if rows:
@@ -122,7 +153,10 @@ class Database:
 
     # TODO: Didn't remember why i wrote it...
     def next(self, offset, limit):
-        query = 'SELECT text, post_id FROM cakes OFFSET (SELECT count(*) FROM cakes) - %s LIMIT %s'
+        query = '''SELECT text, post_id
+                   FROM cakes
+                   OFFSET (SELECT count(*) FROM cakes) - %s
+                   LIMIT %s'''
         rows = self.__query_wrapper(query, (offset, limit))
 
         result = list()
