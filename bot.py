@@ -7,7 +7,6 @@ import re
 import logging
 import ConfigParser as cp
 from app.database import Database
-from signal import signal, SIGINT, SIGTERM, SIGABRT
 from random import getrandbits
 
 # Enable logging
@@ -121,34 +120,9 @@ https://telegram.me/storebot?start=pirozkibot
                                             user.username,
                                             user.last_name))
 
-    def cli_unknow_command(self, bot, update):
-        logger.info('Unknow command')
-
-    def signal_handler(self, signum, frame):
-        self.is_idle = False
-        self.updater.stop()
-
-    def idle(self, stop_signals=(SIGINT, SIGTERM, SIGABRT)):
-        self.is_idle = True
-
-        for sig in stop_signals:
-            signal(sig, self.signal_handler)
-
-        self.update_queue = self.updater.start_polling(poll_interval=0.1,
-                                                       timeout=10)
-
-        while self.is_idle:
-            try:
-                text = raw_input()
-            except NameError:
-                text = input()
-
-            if text == 'stop':
-                self.updater.stop()
-                break
-
-            elif len(text) > 0:
-                self.update_queue.put(text)
+    def idle(self):
+        self.updater.start_polling()
+        self.updater.idle()
 
 
 def main():
@@ -193,9 +167,6 @@ def main():
     # unknow telegram command handler
     dp.addUnknownTelegramCommandHandler(cakesBot.unknow_command)
     dp.addTelegramMessageHandler(cakesBot.message)
-
-    # Command line interface
-    dp.addUnknownStringCommandHandler(cakesBot.cli_unknow_command)
 
     # log all errors
     dp.addErrorHandler(cakesBot.error)
