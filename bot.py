@@ -38,6 +38,7 @@ https://telegram.me/storebot?start=pirozkibot
 
     def __init__(self,  updater, database, botan_token=''):
         self.updater = updater
+        self.botan = None
         if botan_token:
             self.botan = Botan(botan_token)
         self.__db = database
