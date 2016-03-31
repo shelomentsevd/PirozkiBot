@@ -56,6 +56,15 @@ SET default_with_oids = false;
 -- Name: cakes; Type: TABLE; Schema: public; Owner: cakesbot; Tablespace: 
 --
 
+CREATE TABLE users (
+    id integer NOT NULL UNIQUE,
+    name text NOT NULL,
+    joined timestamp without time zone NOT NULL,
+    last_visit timestamp without time zone NOT NULL
+);
+
+ALTER TABLE public.users OWNER TO cakesbot;
+
 CREATE TABLE cakes (
     id integer NOT NULL,
     post_id integer NOT NULL,
@@ -67,7 +76,6 @@ CREATE TABLE cakes (
     author text NOT NULL,
     date timestamp without time zone NOT NULL
 );
-
 
 ALTER TABLE public.cakes OWNER TO cakesbot;
 

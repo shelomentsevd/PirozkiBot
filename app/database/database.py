@@ -140,6 +140,12 @@ class Database:
         else:
             return ["%s%s\n\n" % tuple(row) for row in rows]
 
+    def subscribers(self):
+        pass
+
+    def register(self, id, name):
+        pass
+
     def __query_wrapper(self, query, args=()):
         """
             try, except wrap.
