@@ -7,6 +7,8 @@ import re
 import logging
 import ConfigParser as cp
 from app.database import Database
+from signal import signal, SIGINT, SIGTERM, SIGABRT
+from time import sleep
 from random import getrandbits
 
 # Enable logging
@@ -109,6 +111,10 @@ https://telegram.me/storebot?start=pirozkibot
         poem = self.__db.randomByWord(update.message.text)
         bot.sendMessage(update.message.chat_id, text=poem)
 
+    def signal_handler(self, signum, frame):
+        self.is_idle = False
+        self.updater.stop()
+
     def __message_info(self, message, command='unknow'):
         if self.botan:
             self.botan.track(
@@ -121,9 +127,15 @@ https://telegram.me/storebot?start=pirozkibot
                                             user.username,
                                             user.last_name))
 
-    def idle(self):
+    def idle(self, stop_signals=(SIGINT, SIGTERM, SIGABRT)):
+        self.is_idle = True
+
+        for sig in stop_signals:
+            signal(sig, self.signal_handler)
+            
         self.updater.start_polling()
-        self.updater.idle()
+        while self.is_idle:
+            sleep(1)
 
 
 def main():
