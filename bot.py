@@ -10,6 +10,7 @@ from app.database import Database
 from signal import signal, SIGINT, SIGTERM, SIGABRT
 from time import sleep
 from random import getrandbits
+from app.parser import Parser
 
 # Enable logging
 logging.basicConfig(
@@ -38,9 +39,10 @@ https://telegram.me/storebot?start=pirozkibot
 Автор бота: @HissingSound
     '''
 
-    def __init__(self,  updater, database, botan_token=''):
+    def __init__(self,  updater, database, parser=None, botan_token=''):
         self.updater = updater
         self.botan = None
+        self.parser = parser
         if botan_token:
             self.botan = Botan(botan_token)
         self.__db = database
@@ -113,6 +115,8 @@ https://telegram.me/storebot?start=pirozkibot
 
     def signal_handler(self, signum, frame):
         self.is_idle = False
+        if self.parser:
+            self.parser.stop()
         self.updater.stop()
 
     def __message_info(self, message, command='unknow'):
@@ -132,8 +136,10 @@ https://telegram.me/storebot?start=pirozkibot
 
         for sig in stop_signals:
             signal(sig, self.signal_handler)
-            
+
         self.updater.start_polling()
+        if self.parser:
+            self.parser.start()
         while self.is_idle:
             sleep(1)
 
@@ -151,6 +157,9 @@ def main():
         token = config.get('bot', 'token')
         # botan.io analytics
         botan_token = config.get('botan', 'token')
+        # other section
+        wall = config.get('other', 'wall')
+        update = config.getfloat('other', 'update')
     except:
         logger.error('Configure file error')
         sys.exit()
@@ -160,14 +169,21 @@ def main():
 
     # Get the dispatcher to register handlers
     dp = updater.dispatcher
-    # Connect to database
+    # for bot
     botDB = Database(user=user,
                      password=password,
                      database=database,
                      host=host)
+    # for parser
+    parserDB = Database(user=user,
+                     password=password,
+                     database=database,
+                     host=host)
+    parser = Parser(wall, update, parserDB)
     # Main class
     cakesBot = CakesBot(updater=updater,
                         database=botDB,
+                        parser=parser,
                         botan_token=botan_token)
 
     # on different commands - answer in Telegram
