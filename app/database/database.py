@@ -98,7 +98,7 @@ class Database:
                    LIMIT 1'''
         row = self.__query_wrapper(query)
         if row:
-            return ''.join(row[0])
+            return '\n'.join(row[0])
         else:
             return self.__msg_nothing_found
 
@@ -113,7 +113,7 @@ class Database:
                    LIMIT 1'''
         row = self.__query_wrapper(query, (word, word))
         if row:
-            return ''.join(row[0])
+            return '\n'.join(row[0])
         else:
             return self.__msg_nothing_found
 
@@ -138,7 +138,7 @@ class Database:
         if not rows:
             return [self.__msg_nothing_found]
         else:
-            return ["%s%s\n\n" % tuple(row) for row in rows]
+            return ["%s\n%s\n\n" % tuple(row) for row in rows]
 
     def __query_wrapper(self, query, args=()):
         """
