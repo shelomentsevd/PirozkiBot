@@ -64,11 +64,30 @@ CREATE TABLE users (
     subscribed boolean NOT NULL
 );
 
-CREATE FUNCTION registerOrUpdate(uid integer, uname text, subscribe boolean)
+CREATE FUNCTION update(uid integer, uname text)
     RETURNS boolean AS $$
 DECLARE
 USER_EXISTS boolean;
-VISIT_DATE date;
+VISIT_DATE timestamp;
+BEGIN
+    SELECT EXISTS(SELECT id FROM users WHERE id = uid) INTO USER_EXISTS;
+    SELECT NOW() INTO VISIT_DATE;
+
+    IF USER_EXISTS THEN
+        UPDATE users SET last_visit = VISIT_DATE, name = uname WHERE id = uid;
+    ELSE
+        INSERT INTO users (id, name, joined, last_visit, subscribed) values (uid, uname, VISIT_DATE, VISIT_DATE, TRUE);
+    END IF;
+
+    RETURN TRUE;
+END; $$
+LANGUAGE PLPGSQL; 
+
+CREATE FUNCTION update(uid integer, uname text, subscribe boolean)
+    RETURNS boolean AS $$
+DECLARE
+USER_EXISTS boolean;
+VISIT_DATE timestamp;
 BEGIN
     SELECT EXISTS(SELECT id FROM users WHERE id = uid) INTO USER_EXISTS;
     SELECT NOW() INTO VISIT_DATE;

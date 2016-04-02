@@ -140,11 +140,45 @@ class Database:
         else:
             return ["%s%s\n\n" % tuple(row) for row in rows]
 
-    def subscribers(self):
-        pass
+    def lastPeriod(self, period='1 hour'):
+        '''
+            Returns last poems for the period between (now - period)
+            and now
+        '''
+        query = '''
+                SELECT text, author
+                FROM cakes
+                WHERE date BETWEEN NOW() - INTERVAL %s and NOW()
+                '''
+        rows = self.__query_wrapper(query, period)
+        if not rows:
+            return []
+        else:
+            return ["%s%s\n\n" % tuple(row) for row in rows]
 
-    def register(self, id, name):
-        pass
+    def subscribers(self):
+        '''
+            Returns subscribers list
+        '''
+        query = '''
+                SELECT id FROM users WHERE subscribed = TRUE;
+                '''
+        rows = self.__query_wrapper(query)
+        return [row[0] for row in rows]
+
+    def update_user_subscription(self, id, name, subscribe):
+        query = '''
+                SELECT update(%s, %s, %s)
+                '''
+        self.__query_wrapper(query, (id, name, subscribe))
+        self.__db.commit()
+
+    def update_user(self, id, name):
+        query = '''
+                SELECT update(%s, %s)
+                '''
+        self.__query_wrapper(query, (id, name))
+        self.__db.commit()
 
     def __query_wrapper(self, query, args=()):
         """

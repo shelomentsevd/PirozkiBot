@@ -21,8 +21,11 @@ logger = logging.getLogger(__name__)
 
 
 class CakesBot:
-    __help = '''Напишите боту слово, что бы получить случайный пирожок с ним.
+    __help = '''
+Напишите боту слово, что бы получить случайный пирожок с ним.
 Доступные команды:
+    /subscribe - подписаться на обновления
+    /unsubscribe - отписаться от обновлений
     /last - присылает пять последних пирожков
     /random - присылает вам случайный пирожок
     /help  - выводит эту справку
@@ -39,6 +42,16 @@ https://telegram.me/storebot?start=pirozkibot
 Автор бота: @HissingSound
     '''
 
+    __subscribe = '''
+Бот будет присылать вам свежие пирожки каждый час.
+Что бы отписаться введите команду: /unsubscribe
+    '''
+
+    __unsubscribe = '''
+Вы отписались от бота.
+Что бы подписаться введите команду: /subscribe
+''' 
+
     def __init__(self,  updater, database, parser=None, botan_token=''):
         self.updater = updater
         self.botan = None
@@ -49,14 +62,17 @@ https://telegram.me/storebot?start=pirozkibot
 
     def start(self, bot, update):
         self.__message_info(update.message, 'start')
+        self.__user_update(update.message)
         bot.sendMessage(update.message.chat_id, text=self.__help)
 
     def help(self, bot, update):
         self.__message_info(update.message, 'help')
+        self.__user_update(update.message)
         bot.sendMessage(update.message.chat_id, text=self.__help)
 
     def random(self, bot, update, args):
         self.__message_info(update.message, 'random')
+        self.__user_update(update.message)
         poem = ''
 
         if args:
@@ -67,13 +83,27 @@ https://telegram.me/storebot?start=pirozkibot
 
         bot.sendMessage(update.message.chat_id, text=poem)
 
+    def subscribe(self, bot, update):
+        message = update.message
+        self.__message_info(message, 'subscribe')
+        self.__user_update(message, 'true')
+        bot.sendMessage(update.message.chat_id, text=self.__subscribe)
+
+    def unsubscribe(self, bot, update):
+        message = update.message
+        self.__message_info(message, 'unsubscribe')
+        self.__user_update(message, 'false')
+        bot.sendMessage(update.message.chat_id, text=self.__unsubscribe)
+
     def last(self, bot, update):
         self.__message_info(update.message, 'last')
+        self.__user_update(update.message)
         poems = self.__db.last(5)
         bot.sendMessage(update.message.chat_id, text=''.join(poems))
 
     def about(self, bot, update, args):
         self.__message_info(update.message, 'about')
+        self.__user_update(update.message)
         bot.sendMessage(update.message.chat_id,
                         text=self.__about % self.__db.count())
 
@@ -110,6 +140,7 @@ https://telegram.me/storebot?start=pirozkibot
 
     def message(self, bot, update):
         self.__message_info(update.message, 'message')
+        self.__user_update(update.message)
         poem = self.__db.randomByWord(update.message.text)
         bot.sendMessage(update.message.chat_id, text=poem)
 
@@ -119,17 +150,29 @@ https://telegram.me/storebot?start=pirozkibot
             self.parser.stop()
         self.updater.stop()
 
+    def __user_name(self, message):
+        user = message.from_user
+        return '%s @%s %s' % (user.first_name, 
+                              user.username,
+                              user.last_name)
+
+    def __user_update(self, message, subscribe='ignore'):
+        user_id = message.from_user.id
+        user_name = self.__user_name(message)
+        if subscribe is not 'ignore':
+            self.__db.update_user_subscription(user_id, user_name, subscribe is 'true')
+        else:
+            self.__db.update_user(user_id, user_name)
+
     def __message_info(self, message, command='unknow'):
         if self.botan:
             self.botan.track(
                 message=message,
                 event_name=command
             )
-        user = message.from_user
-        logger.info(u'%s from %s @%s %s' % (message.text,
-                                            user.first_name,
-                                            user.username,
-                                            user.last_name))
+        user_name = self.__user_name(message)
+        logger.info(u'%s from %s' % (message.text,
+                                     user_name))
 
     def idle(self, stop_signals=(SIGINT, SIGTERM, SIGABRT)):
         self.is_idle = True
@@ -191,6 +234,8 @@ def main():
     dp.addTelegramCommandHandler("help",   cakesBot.help)
     dp.addTelegramCommandHandler("random", cakesBot.random)
     dp.addTelegramCommandHandler("last",   cakesBot.last)
+    dp.addTelegramCommandHandler('subscribe', cakesBot.subscribe)
+    dp.addTelegramCommandHandler('unsubscribe', cakesBot.unsubscribe)
     dp.addTelegramCommandHandler("about",  cakesBot.about)
     dp.addTelegramInlineHandler(cakesBot.inline_search)
     # unknow telegram command handler
