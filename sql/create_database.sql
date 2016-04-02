@@ -60,8 +60,28 @@ CREATE TABLE users (
     id integer NOT NULL UNIQUE,
     name text NOT NULL,
     joined timestamp without time zone NOT NULL,
-    last_visit timestamp without time zone NOT NULL
+    last_visit timestamp without time zone NOT NULL,
+    subscribed boolean NOT NULL
 );
+
+CREATE FUNCTION registerOrUpdate(uid integer, uname text, subscribe boolean)
+    RETURNS boolean AS $$
+DECLARE
+USER_EXISTS boolean;
+VISIT_DATE date;
+BEGIN
+    SELECT EXISTS(SELECT id FROM users WHERE id = uid) INTO USER_EXISTS;
+    SELECT NOW() INTO VISIT_DATE;
+
+    IF USER_EXISTS THEN
+        UPDATE users SET last_visit = VISIT_DATE, name = uname, subscribed = subscribe WHERE id = uid;
+    ELSE
+        INSERT INTO users (id, name, joined, last_visit, subscribed) values (uid, uname, VISIT_DATE, VISIT_DATE, subscribe);
+    END IF;
+
+    RETURN TRUE;
+END; $$
+LANGUAGE PLPGSQL; 
 
 ALTER TABLE public.users OWNER TO cakesbot;
 
