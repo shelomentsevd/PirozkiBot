@@ -159,8 +159,8 @@ https://telegram.me/storebot?start=pirozkibot
     def __user_update(self, message, subscribe='ignore'):
         user_id = message.from_user.id
         user_name = self.__user_name(message)
-        if subscribe is not 'ignore':
-            self.__db.update_user_subscription(user_id, user_name, subscribe is 'true')
+        if subscribe != 'ignore':
+            self.__db.update_user_subscription(user_id, user_name, subscribe == 'true')
         else:
             self.__db.update_user(user_id, user_name)
 
