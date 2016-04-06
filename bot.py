@@ -87,7 +87,7 @@ https://telegram.me/storebot?start=pirozkibot
                 if poems:
                     for poem in poems:
                         text, author = poem['text'], poem['author']
-                        msg = text + author
+                        msg = '\n'.join([text, author])
                         uniqueId = hex(getrandbits(64))[2:]
                         article = InlineQueryResultArticle(id=uniqueId,
                                                            title=author,
